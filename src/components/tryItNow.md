@@ -1,16 +1,16 @@
-# Welcome to MarkTwo 🎉
+# Welcome to MarkThree 🎉
 
-MarkTwo lets you read and write markdown from a single, seamless view. When you enter a text block, it toggles to editing mode, and when you exit, it instantly renders to HTML. It continuously, efficiently, and securely syncs your content with your Google Drive, so you can close your laptop, and pick up where you left off on your phone.
+MarkThree lets you read and write markdown from a single, seamless view. When you enter a text block, it toggles to editing mode, and when you exit, it instantly renders to HTML. It continuously, efficiently, and securely syncs your content with your Google Drive, so you can close your laptop, and pick up where you left off on your phone.
 
-MarkTwo stays snappy even for very large documents (tested on War & Peace), so you can use it for long-running efforts such as journals and running notes. You'll be able to navigate those big docs easily with quick, clear search results.
+MarkThree stays snappy even for very large documents (tested on War & Peace), so you can use it for long-running efforts such as journals and running notes. You'll be able to navigate those big docs easily with quick, clear search results.
 
 Plus it's free & open source!
 
-## Writing with MarkTwo
-MarkTwo works with most features of github flavored markdown.
+## Writing with MarkThree
+MarkThree works with most features of github flavored markdown.
 
 ##### Formatting
-Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links](https://marktwo.app).
+Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links](https://markthree.app).
 
 ##### Bullet lists
 -   Makes notes easy
@@ -62,4 +62,4 @@ The markdown spec is not intended to completely replace HTML, which you can fall
 - Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
 - Import and export markdown via the `Docs` menu.
 - Easily search your doc to match keywords and use quotes for "exact strings". Searching for #todo brings up all undone items from your checklists.
-- MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times
+- MarkThree is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times

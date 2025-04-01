@@ -77,13 +77,13 @@ function initialize(gapi) {
   }
 
   function getImagesFolder() {
-    return gapi.client.drive.files.list({q: `name='MarkTwo-Media'` })
+    return gapi.client.drive.files.list({q: `name='MarkThree-Media'` })
     .then(response => {
       if(response.result.files.length) {
         return response.result.files[0].id
       } else {
         const metadata = {
-          name: 'MarkTwo-Media',
+          name: 'MarkThree-Media',
           mimeType: 'application/vnd.google-apps.folder'
         };
         return gapi.client.drive.files.create({

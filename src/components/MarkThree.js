@@ -3,7 +3,7 @@ import moment from 'moment';
 import Shelf from './Shelf';
 import shortid from 'shortid';
 import Doc from './Doc';
-import './MarkTwo.scss';
+import './MarkThree.scss';
 import marked from 'marked';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
@@ -23,7 +23,7 @@ const tryItNowText  = raw('./tryItNow.md');
 
 
 
-class MarkTwo extends React.Component {
+class MarkThree extends React.Component {
   constructor(props) {
     super(props);
 
@@ -534,10 +534,10 @@ class MarkTwo extends React.Component {
         <button className="delete" aria-label="close" onClick={() => this.setState({ showAbout: false })}></button>
       </header>
       <section className="modal-card-body">
-          <p>MarkTwo was created by me, Anthony Garvan. I&apos;m a software developer based out of Chicago.
+          <p>MarkThree was created by me, Anthony Garvan. I&apos;m a software developer based out of Chicago.
             I love spending time with my family, working with my team, and tinkering with random projects like this one.</p>
 
-          <p>MarkTwo is my second attempt at a markdown editor, and obviously my best. It took many months to get right,
+          <p>MarkThree is my second attempt at a markdown editor, and obviously my best. It took many months to get right,
             if you enjoy using it please consider showing your appreciation by buying me a cup of coffee ☕❤️.</p>
           <div className="m2-me"><img className="m2-profile" src={me} alt="developer" />
           <div>
@@ -546,7 +546,7 @@ class MarkTwo extends React.Component {
       <footer className="modal-card-foot">
         <a href="/privacy.txt" target="_blank">Privacy</a>
         <a href="/terms.txt" target="_blank">Terms</a>
-        <a href="https://github.com/anthonygarvan/marktwo" target="_blank">Source</a>
+        <a href="https://github.com/anthonygarvan/markthree" target="_blank">Source</a>
         <a className="m2-coffee is-pulled-right" href="https://www.buymeacoffee.com/GDsZofV" target="_blank">
           <img src={coffee} alt="Buy Me A Coffee"/></a>
     </footer>
@@ -562,17 +562,17 @@ class MarkTwo extends React.Component {
       </header>
       <section className="modal-card-body content">
         <h2>General notes</h2>
-        <p>Thanks for using MarkTwo!</p>
+        <p>Thanks for using MarkThree!</p>
           <ul>
           <li>When you select a block (paragraph), it automatically transforms that HTML into markdown,
         and when you exit the block, it renders to HTML. Since Markdown can be multiline, you'll have to press enter twice to exit a block.</li>
-      <li>MarkTwo continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue (or dark pink in dark mode), it means changes are being made.
+      <li>MarkThree continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue (or dark pink in dark mode), it means changes are being made.
       Once it turns dark blue (bright pink in dark mode), the changes are synced (a few seconds after you're done editing).</li>
           <li>We do not have access to your documents, they are as secure as your Google account (we recommend enabling two factor authentication).</li>
           <li>You can search for keywords, adding quotes matches "exact terms", and the special keyword #todo searches for all undone checklist tasks.</li>
         </ul>
-        <h2>Writing with MarkTwo</h2>
-        <p>MarkTwo supports most features of github flavored markdown.</p>
+        <h2>Writing with MarkThree</h2>
+        <p>MarkThree supports most features of github flavored markdown.</p>
         <h5>Inline Formatting</h5>
         <pre>
 {`Italics: *single asterisks* or _single underscores_
@@ -603,9 +603,9 @@ Links: [Text in brackets](https://link-in-parentheses.com)`}</pre>
 </pre>
 
 <h5>Todo lists and Reminders</h5>
-<p>MarkTwo supports the standard syntax for todo lists. Additionally,
+<p>MarkThree supports the standard syntax for todo lists. Additionally,
 it supports reminders&mdash;when a not-done todo list item contains a reminder string,
-you'll get a banner reminder when you load MarkTwo on or after that day. The format for a reminder string
+you'll get a banner reminder when you load MarkThree on or after that day. The format for a reminder string
 is :reminder-ribbon: [date][semi-colon].</p>
 <pre>
 {`- [ ] A dash, a space, brackets with a space in between
@@ -663,7 +663,7 @@ And underlined text <u>like this</u>
 </pre>
 
 <h5>Text Tricks</h5>
-<p>MarkTwo expands the strings <code>/today</code> and <code>/now</code> into the current date or date and time for your locale.
+<p>MarkThree expands the strings <code>/today</code> and <code>/now</code> into the current date or date and time for your locale.
 You can also use <code>/date</code> to bring up a date picker&mdash;this is especially handy when you're setting reminders.
 Also, to make things easier to find later, <code>#hashtags</code> and <code>@mentions</code> autocomplete.
 You can also search for and enter emojis with colons like this: <code>:emojis:</code></p>
@@ -678,4 +678,4 @@ You can also search for and enter emojis with colons like this: <code>:emojis:</
   }
 }
 
-export default MarkTwo
+export default MarkThree

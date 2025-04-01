@@ -1,5 +1,5 @@
 import React from 'react';
-import MarkTwo from './MarkTwo';
+import MarkThree from './MarkThree';
 import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
@@ -85,7 +85,7 @@ class Splash extends React.Component {
   }
 
   render() {
-    return <div>{this.state.tryItNow && <MarkTwo
+    return <div>{this.state.tryItNow && <MarkThree
         gapi={this.state.gapi}
         handleLogout={() => window.location = "/"}
         handleLogin={() => alert("You're in anonymous mode! To log in please sign in under your google account")}
@@ -93,7 +93,7 @@ class Splash extends React.Component {
         tryItNow={true}
         offlineMode={this.state.offlineMode} />}
       {!this.state.tryItNow && this.state.isAuthenticated &&
-          <MarkTwo key={this.state.userEmail}
+          <MarkThree key={this.state.userEmail}
             userEmail={this.state.userEmail}
             gapi={this.state.gapi}
             handleLogout={this.handleLogout}
@@ -102,10 +102,10 @@ class Splash extends React.Component {
             tryItNow={false}
             offlineMode={this.state.offlineMode} />}
       {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">
-            <h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
+            <h1 className="title is-1"><img src={logo} alt="logo" />MarkThree<img src={logo} alt="logo" /></h1>
         </div>}
       {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash-container"><div className="m2-splash">
-      <div className="m2-hero"><h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
+      <div className="m2-hero"><h1 className="title is-1"><img src={logo} alt="logo" />MarkThree<img src={logo} alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
           <a className="button is-primary is-outlined" href="/try-it-now">Try the demo</a>
@@ -124,14 +124,14 @@ class Splash extends React.Component {
             </div>
             <div className="column">
               <h4 className="title is-4">Syncing</h4>
-              <p>MarkTwo is web-native, so it works across devices, and your docs are always synced.</p>
+              <p>MarkThree is web-native, so it works across devices, and your docs are always synced.</p>
             </div>
         </div>
         <hr />
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Private</h4>
-                <p>MarkTwo is a static app backed by your own Google Drive&mdash;we don't store any of your data.</p>
+                <p>MarkThree is a static app backed by your own Google Drive&mdash;we don't store any of your data.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Powerful</h4>
@@ -139,7 +139,7 @@ class Splash extends React.Component {
             </div>
             <div className="column">
               <h4 className="title is-4">Free</h4>
-              <p>No lock-in&mdash;MarkTwo is free and open source, and you can export your docs at any time.</p>
+              <p>No lock-in&mdash;MarkThree is free and open source, and you can export your docs at any time.</p>
             </div>
         </div>
       </div>
