@@ -1,4 +1,4 @@
-@import './base.scss';
+@import "./base.scss";
 
 .m2-docs {
   section div {
@@ -15,9 +15,6 @@
       select {
         background-color: transparent;
         border: none;
-        &:focus {
-
-        }
       }
     }
   }
@@ -80,9 +77,8 @@
   }
 }
 
-
 .m2-about {
-  footer  {
+  footer {
     text-align: left;
     a {
       margin-right: 4vw;

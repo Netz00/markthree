@@ -1,4 +1,4 @@
-@import './base.scss';
+@import "./base.scss";
 
 .m2-doc {
   max-width: calc(100vw - 3.4rem);
@@ -21,7 +21,7 @@
     font-family: "Roboto Slab", serif;
   }
 
-  &>* {
+  & > * {
     padding: 0.5rem 0rem 0.5rem 0rem;
     @include tablet {
       padding: 0.5rem 1rem 0.5rem 1rem;
@@ -30,14 +30,14 @@
     border-left: 3px solid transparent;
   }
 
-  &>ul {
+  & > ul {
     padding-left: 3rem;
     &.m2-edit-mode {
       padding-left: 2rem;
     }
   }
 
-  &>h2 {
+  & > h2 {
     color: lighten($black, 50%) !important;
     font-size: 1.6rem;
   }
@@ -49,7 +49,7 @@
     }
   }
 
-  input[type=checkbox] {
+  input[type="checkbox"] {
     cursor: pointer;
   }
 
@@ -99,8 +99,6 @@
   &.m2-syncing .m2-edit-mode {
     border-left: 3px solid rgba($primary, 0.15);
   }
-
-
 }
 
 .m2-offline {
@@ -111,7 +109,8 @@
   font-size: 2rem;
 }
 
-.m2-is-signed-out,.m2-reminder {
+.m2-is-signed-out,
+.m2-reminder {
   position: fixed;
   top: 0px;
   width: 100%;
@@ -178,7 +177,8 @@
   }
 }
 
-#m2-img-dialog,#m2-date-dialog {
+#m2-img-dialog,
+#m2-date-dialog {
   padding: 2.5rem 2.5rem 1rem 2.5rem;
   input {
     margin-bottom: 1.6rem;
@@ -186,7 +186,7 @@
       outline: none;
     }
   }
-  input[type=date] {
+  input[type="date"] {
     font-size: 1.5rem;
   }
 }

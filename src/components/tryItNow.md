@@ -7,37 +7,42 @@ MarkThree stays snappy even for very large documents (tested on War & Peace), so
 Plus it's free & open source!
 
 ## Writing with MarkThree
+
 MarkThree works with most features of github flavored markdown.
 
 ##### Formatting
+
 Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links](https://markthree.app).
 
 ##### Bullet lists
--   Makes notes easy
--   Distraction free
-    * Indent four spaces to start a sub-list
+
+- Makes notes easy
+- Distraction free
+  - Indent four spaces to start a sub-list
 
 ##### Numbered lists
+
 1. The first step
 1. The second step
-    1. First part of the second step
+   1. First part of the second step
 
 #### Todo lists and reminders
+
 - [ ] Isn't it nice to get things done?
 - [x] Finish implementing TODO lists
 - [ ] Get a haircut! 🎗 July 2, 2024;
 
 ##### Block quotes
+
 > _Far and away the best prize that life has to offer is to work hard at work worth doing._
 
 ##### Tables
 
-|      Object       |    Is a sandwich?  |   Is delicious?  |
-| ----------------- | ------------------ | ---------------  |
-| Grilled cheese    |          yes       |      yes         |
-| Hot dog           |          no        |      yes         |
-| Burrito           |          no        |      yes         |
-
+| Object         | Is a sandwich? | Is delicious? |
+| -------------- | -------------- | ------------- |
+| Grilled cheese | yes            | yes           |
+| Hot dog        | no             | yes           |
+| Burrito        | no             | yes           |
 
 // Bookmarks
 
@@ -50,15 +55,19 @@ Supports standard markdown syntax to link to images. You can also upload new ima
 ![deception](/img/deception.jpg)
 
 #### Other HTML
+
 The markdown spec is not intended to completely replace HTML, which you can fall back to if you want a particular tag or style. For example you can highlight text with the `mark` tag <mark>like this</mark>, or underline with the `u` tag <u>like this</u>.
+
 <center><em>The center tag is also handy!</em></center>
 
 #### Advanced text entry
+
 - Automatic text expansion for `/now` and `/today`. Use `/date` to bring up a date picker.
 - Want to make sure you can find something later? Try #hashtags and @mentions to stay organized.
 - Use colons to search for :emojis: 😊
 
 ## And more!
+
 - Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
 - Import and export markdown via the `Docs` menu.
 - Easily search your doc to match keywords and use quotes for "exact strings". Searching for #todo brings up all undone items from your checklists.

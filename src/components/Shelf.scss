@@ -1,16 +1,16 @@
-@import './base.scss';
+@import "./base.scss";
 
 $background: #fafafa;
 .m2-menu {
   position: fixed;
   bottom: 0.5rem;
   left: 0rem;
-  @media(min-width: 768px) {
+  @media (min-width: 768px) {
     bottom: 1rem;
   }
   a {
     padding: 0.6rem;
-    @media(min-width: 768px) {
+    @media (min-width: 768px) {
       padding: 1.5rem;
     }
     font-size: 2rem;

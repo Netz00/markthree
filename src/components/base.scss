@@ -1,16 +1,17 @@
-$primary: #3137FD;
+$primary: #3137fd;
 $white: #ffffff;
 $link: $primary;
-$fontFamily: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+$fontFamily: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
+  Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 $pretty--color-success: $primary;
 $pretty--color-default: $primary;
-$text: #474C6D;
-$darkModePrimary: #FF1DCE;
+$text: #474c6d;
+$darkModePrimary: #ff1dce;
 $darkModeDark: #212127;
 
-@import '~bulma';
-@import '~bulma-switch';
-@import './dialog-polyfill';
+@import "~bulma";
+@import "~bulma-switch";
+@import "./dialog-polyfill";
 
 body {
   font-size: 14px;
@@ -30,9 +31,11 @@ body {
       }
     }
 
-    .m2-doc,.m2-ellipsis {
+    .m2-doc,
+    .m2-ellipsis {
       color: #cdced0;
-      a,.m2-mention-hashtag {
+      a,
+      .m2-mention-hashtag {
         color: $darkModePrimary;
         &:hover {
           color: lighten($darkModePrimary, 10%);
@@ -53,7 +56,12 @@ body {
 
     .m2-doc {
       &.content {
-        h1,h2,h3,h4,h5,h6 {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
           color: #cdced0;
         }
       }
@@ -91,8 +99,9 @@ body {
   }
 }
 
-.switch[type=checkbox]:checked + label::before, .switch[type=checkbox]:checked + label:before {
-    background: $primary;
+.switch[type="checkbox"]:checked + label::before,
+.switch[type="checkbox"]:checked + label:before {
+  background: $primary;
 }
 
 a:hover {
@@ -102,7 +111,6 @@ a:hover {
 .content pre {
   white-space: pre-wrap;
 }
-
 
 .modal.is-active {
   display: block;
