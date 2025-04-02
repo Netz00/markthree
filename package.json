@@ -12,6 +12,7 @@
     "bulma": "^0.7.5",
     "bulma-switch": "^2.0.0",
     "dialog-polyfill": "^0.5.4",
+    "dot-prop": "^9.0.0",
     "emoji-dictionary": "^1.0.11",
     "idb-keyval": "^3.2.0",
     "in-browser-download": "^2.0.0",
