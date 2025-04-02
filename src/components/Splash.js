@@ -1,6 +1,6 @@
 import React from "react";
 import MarkThree from "./MarkThree";
-import "./Splash.scss";
+import "../style/Splash.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import $ from "jquery";

@@ -7,7 +7,7 @@ import {
   faFileAlt,
   faCog,
 } from "@fortawesome/free-solid-svg-icons";
-import "./Shelf.scss";
+import "../style/Shelf.scss";
 import anonymous from "../img/anonymous.png";
 import user from "../img/user.png";
 import { set, get } from "idb-keyval";

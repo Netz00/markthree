@@ -1,6 +1,6 @@
 import React from "react";
-import "./Doc.scss";
-import "./loading.scss";
+import "../style/Doc.scss";
+import "../style/loading.scss";
 import $ from "jquery";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";

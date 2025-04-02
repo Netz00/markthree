@@ -3,7 +3,7 @@ import moment from "moment";
 import Shelf from "./Shelf";
 import shortid from "shortid";
 import Doc from "./Doc";
-import "./MarkThree.scss";
+import "../style/MarkThree.scss";
 import marked from "marked";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import syncUtils from "./syncUtils";
