@@ -59,9 +59,6 @@ class Doc extends React.Component {
         !props.offlineMode &&
         props.gapi &&
         props.gapi.auth2.getAuthInstance().isSignedIn.get();
-      const lostConnection =
-        !props.offlineMode &&
-        !(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get());
 
       if (online || intentionallyOffline) {
         $(".m2-is-signed-out").hide();
@@ -279,7 +276,7 @@ class Doc extends React.Component {
       newLines.length / Math.ceil(newLines.length / 1500)
     );
 
-    _.chunk(newLines, chunkSize).map((page) => {
+    _.chunk(newLines, chunkSize).forEach((page) => {
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       pages[id] = page;
@@ -292,7 +289,7 @@ class Doc extends React.Component {
       $(sel.anchorNode).closest("#m2-doc > *").attr("id") ||
       docMetadata.caretAt;
     // cache all pageIds
-    pageIds.map((pageId) => {
+    pageIds.forEach((pageId) => {
       set(pageId, JSON.stringify(pages[pageId])).catch(() =>
         console.log("storage full")
       );
@@ -364,7 +361,7 @@ class Doc extends React.Component {
           localPages,
           this.state.docMetadata.pageIds
         );
-        removeThese.map((pageId) => {
+        removeThese.forEach((pageId) => {
           del(pageId).catch(() =>
             console.log("page not cached, did not remove.")
           );
@@ -504,9 +501,9 @@ class Doc extends React.Component {
     block = block
       .split("\n")
       .map((line) => {
-        if (/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(line)) {
+        if (/(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(line)) {
           let matchedDate = moment(
-            line.match(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗(.*);/)[1]
+            line.match(/(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗(.*);/)[1]
           );
           if (matchedDate.isValid()) {
             line = line.replace(/🎗.*;/, (reminderText) => {
@@ -842,6 +839,8 @@ class Doc extends React.Component {
               case "/date":
                 newText = "/m2date";
                 break;
+              default:
+                console.error(`${newText} is not a slash command.`);
             }
           }
           document.execCommand("insertHTML", false, `${newText} `);
@@ -891,7 +890,7 @@ class Doc extends React.Component {
         $(window).on("scroll", verticalPositionAutocomplete);
         autocompleteActive = true;
 
-        if (e.key == "ArrowDown" && e.type === "keydown" && results.length) {
+        if (e.key === "ArrowDown" && e.type === "keydown" && results.length) {
           autocompleteSelectedIndex++;
           if (!autocompleteDropdownAbove) {
             // let caret move down
@@ -908,7 +907,7 @@ class Doc extends React.Component {
           }
         }
 
-        if (e.key == "ArrowUp" && e.type === "keydown" && results.length) {
+        if (e.key === "ArrowUp" && e.type === "keydown" && results.length) {
           autocompleteSelectedIndex--;
           if (!autocompleteDropdownAbove) {
             // wrap around
@@ -926,7 +925,7 @@ class Doc extends React.Component {
           }
         }
 
-        if (e.key == "Enter" && e.type === "keydown") {
+        if (e.key === "Enter" && e.type === "keydown") {
           e.preventDefault();
           if (
             autocompleteSelectedIndex > 0 &&
@@ -1166,16 +1165,16 @@ class Doc extends React.Component {
       let idx = 0;
       const id = $(this).closest("#m2-doc>*")[0].id;
       that.state.doc[id].split("\n").forEach((line) => {
-        if (/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[[x\s]\]/.test(line)) {
-          if (idx == parseInt(this.parentElement.getAttribute("idx"))) {
+        if (/(?:[-*+]|(?:[0-9]+\.))\s+\[[x\s]\]/.test(line)) {
+          if (idx === parseInt(this.parentElement.getAttribute("idx"))) {
             if (this.checked) {
               line = line.replace(
-                /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]/,
+                /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]/,
                 (match) => match.replace("[ ]", "[x]")
               );
             } else {
               line = line.replace(
-                /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[x\]/,
+                /(?:[-*+]|(?:[0-9]+\.))\s+\[x\]/,
                 (match) => match.replace("[x]", "[ ]")
               );
             }
@@ -1221,11 +1220,11 @@ class Doc extends React.Component {
 
     const reminders = lines
       .filter((lineObj) => {
-        return /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(lineObj.text);
+        return /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(lineObj.text);
       })
       .map((lineObj, i) => {
         let match = lineObj.text.match(
-          /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s(.*)🎗(.*);/
+          /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s(.*)🎗(.*);/
         );
         let date = moment(match[2]);
         let snippet = match[1];

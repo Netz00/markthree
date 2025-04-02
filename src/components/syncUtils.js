@@ -1,12 +1,12 @@
 import async from "async";
 import { get, set, del } from "idb-keyval";
 
+const boundary = "-------314159265358979323846";
+const delimiter = "\r\n--" + boundary + "\r\n";
+const close_delim = "\r\n--" + boundary + "--";
+
 function initialize(gapi) {
   function create(name, data) {
-    const boundary = "-------314159265358979323846";
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-
     const metadata = {
       name,
       mimeType: "application/json",
@@ -39,10 +39,6 @@ function initialize(gapi) {
 
   function createImage(name, dataUrl) {
     return getImagesFolder().then((imageFolderId) => {
-      const boundary = "-------314159265358979323846";
-      const delimiter = "\r\n--" + boundary + "\r\n";
-      const close_delim = "\r\n--" + boundary + "--";
-
       const mimeType = dataUrl.match(/data:(image\/[a-z]+);/)[1];
       const data = dataUrl.split(",")[1];
       const metadata = {
@@ -101,10 +97,6 @@ function initialize(gapi) {
   }
 
   function update(fileId, data) {
-    const boundary = "-------314159265358979323846";
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-
     const metadata = {
       mimeType: "application/json",
     };

@@ -218,7 +218,7 @@ class MarkThree extends React.Component {
 
   setTitle(id, title) {
     const appData = _.cloneDeep(this.state.appData);
-    appData.file = appData.docs.map((f) => {
+    appData.file = appData.docs.forEach((f) => {
       if (f.id === id) {
         f.title = title;
       }
@@ -228,7 +228,7 @@ class MarkThree extends React.Component {
 
   toggleArchive(id) {
     const appData = _.cloneDeep(this.state.appData);
-    appData.file = appData.docs.map((f) => {
+    appData.file = appData.docs.forEach((f) => {
       if (f.id === id) {
         f.archived = !f.archived;
       }
@@ -246,7 +246,7 @@ class MarkThree extends React.Component {
         .map((id) => ({ id, html: this.state.doc[id].replace("// ", "") }))
         .slice(0, 1000);
     } else if (/^#todo$/i.test(this.state.searchString)) {
-      let searchRegex = /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s/;
+      let searchRegex = /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s/;
       searchResults = this.state.allLines
         .filter((id) => searchRegex.test(this.state.doc[id]))
         .map((id) => ({
@@ -328,6 +328,10 @@ class MarkThree extends React.Component {
           this.deleteFile(file.id);
         }
         break;
+      default:
+        console.error(
+          `Invalid action ${e.target.value} executed on file ${file.id}`
+        );
     }
   }
 
@@ -562,7 +566,7 @@ class MarkThree extends React.Component {
                   <tbody>
                     {this.state.docs &&
                       this.state.docs
-                        .filter((f) => !!f.archived == this.state.viewArchive)
+                        .filter((f) => !!f.archived === this.state.viewArchive)
                         .map((f) => (
                           <tr key={f.id}>
                             <td>
@@ -824,6 +828,7 @@ class MarkThree extends React.Component {
                 <a
                   href="https://github.com/anthonygarvan/markthree"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Source
                 </a>
@@ -831,6 +836,7 @@ class MarkThree extends React.Component {
                   className="m2-coffee is-pulled-right"
                   href="https://www.buymeacoffee.com/GDsZofV"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <img src={coffee} alt="Buy Me A Coffee" />
                 </a>
