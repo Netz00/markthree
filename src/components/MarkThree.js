@@ -17,6 +17,7 @@ import me from "../img/me.jpg";
 import coffee from "../img/coffee.png";
 import { faBolt, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import "typeface-roboto-slab";
+import { SearchModal } from "./modals/Search";
 const tryItNowText = raw("./tryItNow.md");
 
 class MarkThree extends React.Component {
@@ -389,6 +390,24 @@ class MarkThree extends React.Component {
     });
   }
 
+  goToSearchResult(blockId) {
+    this.setState({
+      goToBlock: blockId,
+      showSearch: false,
+      searchString: "",
+      searchResults: [],
+      showShelf: false,
+    });
+  }
+
+  closeSearchModal() {
+    this.setState({
+      showSearch: false,
+      searchString: "",
+      searchResults: [],
+    });
+  }
+
   render() {
     return (
       <div>
@@ -436,80 +455,14 @@ class MarkThree extends React.Component {
         />
 
         {this.state.showSearch && (
-          <div className="m2-search modal is-active">
-            <div
-              className="modal-background"
-              onClick={() =>
-                this.setState({
-                  showSearch: false,
-                  searchString: "",
-                  searchResults: [],
-                })
-              }
-            ></div>
-            <div className="modal-card">
-              <header className="modal-card-head">
-                <p className="modal-card-title">Search</p>
-                <button
-                  className="delete"
-                  aria-label="close"
-                  onClick={() =>
-                    this.setState({
-                      showSearch: false,
-                      searchString: "",
-                      searchResults: [],
-                    })
-                  }
-                ></button>
-              </header>
-              <section className="modal-card-body">
-                <form onSubmit={this.handleSearch}>
-                  <div className="field has-addons">
-                    <div className="control is-expanded">
-                      <input
-                        className="input is-fullwidth"
-                        type="search"
-                        placeholder="Search this doc"
-                        value={this.state.searchString}
-                        onChange={(e) =>
-                          this.setState({ searchString: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="control m2-search-button">
-                      <button type="submit" className="button is-primary">
-                        Search
-                      </button>
-                    </div>
-                  </div>
-                </form>
-                <div className="m2-search-results">
-                  {this.state.searchResults.length ? (
-                    this.state.searchResults.map((r) => (
-                      <div
-                        key={r.id}
-                        className="m2-search-result"
-                        onClick={() =>
-                          this.setState({
-                            goToBlock: r.id,
-                            showSearch: false,
-                            searchString: "",
-                            searchResults: [],
-                            showShelf: false,
-                          })
-                        }
-                        dangerouslySetInnerHTML={{ __html: r.html }}
-                      ></div>
-                    ))
-                  ) : (
-                    <p>
-                      <em>Didn't find anything...</em>
-                    </p>
-                  )}
-                </div>
-              </section>
-            </div>
-          </div>
+          <SearchModal
+            searchString={this.state.searchString}
+            searchResults={this.state.searchResults}
+            handleSearch={this.handleSearch}
+            setSearchString={(value) => this.setState({ searchString: value })}
+            closeSearch={() => this.closeSearchModal()}
+            goToBlock={(blockId) => this.goToSearchResult(blockId)}
+          />
         )}
 
         {this.state.showDocs && (
