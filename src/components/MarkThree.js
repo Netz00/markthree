@@ -140,7 +140,12 @@ class MarkThree extends React.Component {
         }
       });
     } else {
-      setTimeout(() => this.sync(appData, additionalState), 200);
+      // Return a Promise for the recursive call as well
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          this.sync(appData, additionalState).then(resolve);
+        }, 200);
+      });
     }
   }
 
