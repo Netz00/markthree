@@ -1,12 +1,24 @@
 import async from "async";
 import { get, set, del } from "idb-keyval";
 
+// Constants for multipart request formatting
 const boundary = "-------314159265358979323846";
 const delimiter = "\r\n--" + boundary + "\r\n";
 const close_delim = "\r\n--" + boundary + "--";
 
+/**
+ * Initialize Google API sync utilities
+ * @param {Object} gapi - Google API client instance
+ * @returns {Object} - Object containing all sync utility functions
+ */
 function initialize(gapi) {
-  function create(name, data) {
+  /**
+   * Creates a file in Google Drive app data folder
+   * @param {string} name - File name
+   * @param {Object} data - File data to be stored as JSON
+   * @returns {Promise<Object>} - Promise resolving to the created file information
+   */
+  async function create(name, data) {
     const metadata = {
       name,
       mimeType: "application/json",
@@ -27,19 +39,38 @@ function initialize(gapi) {
       method: "POST",
       params: { uploadType: "multipart" },
       headers: {
-        "Content-Type": 'multipart/related; boundary="' + boundary + '"',
+        "Content-Type": `multipart/related; boundary="${boundary}"`,
       },
       body: multipartRequestBody,
     });
 
-    return new Promise((resolve) => {
-      request.execute((result) => resolve(result));
+    return new Promise((resolve, reject) => {
+      request.execute((result, error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      });
     });
   }
 
-  function createImage(name, dataUrl) {
-    return getImagesFolder().then((imageFolderId) => {
-      const mimeType = dataUrl.match(/data:(image\/[a-z]+);/)[1];
+  /**
+   * Creates an image file in Google Drive
+   * @param {string} name - Image file name
+   * @param {string} dataUrl - Data URL of the image
+   * @returns {Promise<Object>} - Promise resolving to the created image information
+   */
+  async function createImage(name, dataUrl) {
+    try {
+      const imageFolderId = await getImagesFolder();
+
+      const mimeTypeMatch = dataUrl.match(/data:(image\/[a-z]+);/);
+      if (!mimeTypeMatch) {
+        throw new Error("Invalid data URL format");
+      }
+
+      const mimeType = mimeTypeMatch[1];
       const data = dataUrl.split(",")[1];
       const metadata = {
         name,
@@ -62,38 +93,55 @@ function initialize(gapi) {
         method: "POST",
         params: { uploadType: "multipart" },
         headers: {
-          "Content-Type": 'multipart/related; boundary="' + boundary + '"',
+          "Content-Type": `multipart/related; boundary="${boundary}"`,
         },
         body: multipartRequestBody,
       });
 
-      return new Promise((resolve) => {
-        request.execute((result) => resolve(result));
+      return new Promise((resolve, reject) => {
+        request.execute((result, error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        });
       });
-    });
+    } catch (error) {
+      console.error("Error creating image:", error);
+      throw error;
+    }
   }
 
-  function getImagesFolder() {
-    return gapi.client.drive.files
-      .list({ q: `name='MarkThree-Media'` })
-      .then((response) => {
-        if (response.result.files.length) {
-          return response.result.files[0].id;
-        } else {
-          const metadata = {
-            name: "MarkThree-Media",
-            mimeType: "application/vnd.google-apps.folder",
-          };
-          return gapi.client.drive.files
-            .create({
-              resource: metadata,
-              fields: "id",
-            })
-            .then((file) => {
-              return file.result.id;
-            });
-        }
+  /**
+   * Gets or creates the images folder in Google Drive
+   * @returns {Promise<string>} - Promise resolving to the folder ID
+   */
+  async function getImagesFolder() {
+    try {
+      const response = await gapi.client.drive.files.list({
+        q: `name='MarkThree-Media'`,
       });
+
+      if (response.result.files.length) {
+        return response.result.files[0].id;
+      } else {
+        const metadata = {
+          name: "MarkThree-Media",
+          mimeType: "application/vnd.google-apps.folder",
+        };
+
+        const file = await gapi.client.drive.files.create({
+          resource: metadata,
+          fields: "id",
+        });
+
+        return file.result.id;
+      }
+    } catch (error) {
+      console.error("Error getting images folder:", error);
+      throw error;
+    }
   }
 
   function update(fileId, data) {
