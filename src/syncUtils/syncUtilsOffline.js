@@ -2,81 +2,127 @@ import async from "async";
 import { get, set, del } from "idb-keyval";
 
 function initialize() {
-  function findOrFetch(name) {
-    return new Promise((resolve) => {
-      get(name).then((localVersion) => {
-        if (localVersion) {
-          resolve(JSON.parse(localVersion));
-        } else {
-          resolve(false);
-        }
-      });
-    });
+  /**
+   * Fetches data from IndexedDB by key name
+   * @param {string} name - The key to fetch
+   * @returns {Promise<any|false>} The parsed data or false if not found
+   */
+  async function findOrFetch(name) {
+    try {
+      const localVersion = await get(name);
+      return localVersion ? JSON.parse(localVersion) : false;
+    } catch (error) {
+      console.error(`Error fetching ${name}:`, error);
+      return false;
+    }
   }
 
+  /**
+   * Fetches multiple items from IndexedDB
+   * @param {string[]} names - Array of keys to fetch
+   * @returns {Promise<any[]>} Array of results
+   */
   function findOrFetchFiles(names) {
-    return async.series(
-      names.map((name) => {
-        return function (callback) {
-          findOrFetch(name).then((result) => {
-            if (result) {
-              callback(null, result);
-            } else {
-              callback(`Could not find file ${name}`, null);
-            }
-          });
-        };
-      })
-    );
+    const tasks = names.map((name) => async () => {
+      const result = await findOrFetch(name);
+      if (!result) {
+        throw new Error(`Could not find file ${name}`);
+      }
+      return result;
+    });
+
+    return async.series(tasks);
   }
 
-  function deleteFile(name) {
-    del(name);
+  /**
+   * Deletes a file from IndexedDB
+   * @param {string} name - The key to delete
+   * @returns {Promise<void>}
+   */
+  async function deleteFile(name) {
+    try {
+      await del(name);
+      return { status: 204 }; // Simulate HTTP 204 No Content success response
+    } catch (error) {
+      console.error(`Error deleting ${name}:`, error);
+      throw error;
+    }
   }
 
+  /**
+   * Deletes multiple files from IndexedDB
+   * @param {string[]} names - Array of keys to delete
+   * @returns {Promise<void[]>}
+   */
   function deleteFiles(names) {
-    return async.series(
-      names.map((name) => {
-        return function (callback) {
-          deleteFile(name)
-            .then((result) => {
-              setTimeout(() => {
-                if (!(result.status === 204)) {
-                  callback(`Delete request failed for ${name}`);
-                } else {
-                  callback();
-                }
-              }, 100);
-            })
-            .catch((err) => callback("Delete request failed"));
-        };
-      })
-    );
-  }
+    const tasks = names.map((name) => async () => {
+      try {
+        const result = await deleteFile(name);
 
-  function initializeData(name, defaultData) {
-    return new Promise((resolve) => {
-      get(name).then((cachedData) => {
-        cachedData = cachedData && JSON.parse(cachedData);
-        resolve(cachedData);
-      });
+        // Add a delay to simulate network latency
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        if (result.status !== 204) {
+          throw new Error(`Delete request failed for ${name}`);
+        }
+      } catch (error) {
+        throw new Error(`Delete request failed for ${name}: ${error.message}`);
+      }
     });
+
+    return async.series(tasks);
   }
 
-  function syncByRevision(name, newData) {
-    newData.revision++;
-    return new Promise((resolve) => {
-      set(name, JSON.stringify(newData)).then(() => resolve(newData));
-    });
+  /**
+   * Initializes data from cache or uses default
+   * @param {string} name - The key to fetch
+   * @param {any} defaultData - Default data to use if not found
+   * @returns {Promise<any>}
+   */
+  async function initializeData(name, defaultData) {
+    try {
+      const cachedData = await get(name);
+      return cachedData ? JSON.parse(cachedData) : defaultData;
+    } catch (error) {
+      console.error(`Error initializing ${name}:`, error);
+      return defaultData;
+    }
   }
 
-  function createFiles(files) {
-    // this is handled synchronously
-    return new Promise((resolve) => resolve());
+  /**
+   * Updates data in IndexedDB with incremented revision
+   * @param {string} name - The key to update
+   * @param {object} newData - The data to store
+   * @returns {Promise<object>} The updated data
+   */
+  async function syncByRevision(name, newData) {
+    try {
+      newData.revision++;
+      await set(name, JSON.stringify(newData));
+      return newData;
+    } catch (error) {
+      console.error(`Error syncing ${name}:`, error);
+      throw error;
+    }
   }
 
-  function createImage() {
-    return new Promise((resolve) => resolve());
+  /**
+   * Placeholder for file creation
+   * @param {any[]} files - Files to create
+   * @returns {Promise<void>}
+   */
+  async function createFiles(files) {
+    // Placeholder implementation
+    return;
+  }
+
+  /**
+   * Placeholder for image creation
+   * @returns {Promise<void>}
+   */
+  async function createImage() {
+    // Placeholder implementation
+    return;
   }
 
   return {
