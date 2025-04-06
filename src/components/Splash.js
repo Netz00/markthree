@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MarkThree from "./MarkThree";
 import "../style/Splash.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,20 +8,14 @@ import { get, set } from "idb-keyval";
 import logo from "../img/logo512.png";
 import $script from "scriptjs";
 
-class Splash extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleLogin = this.handleLogin.bind(this);
-    this.handleLogout = this.handleLogout.bind(this);
-    this.handleSwitchUser = this.handleSwitchUser.bind(this);
-    this.state = {
-      tryItNow: document.location.pathname.startsWith("/try-it-now"),
-      isAuthenticated: null,
-    };
-    Error.stackTraceLimit = 100;
-  }
+const Splash = () => {
+  const [tryItNow] = useState(document.location.pathname.startsWith("/try-it-now"));
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [gapiState, setGapiState] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [offlineMode, setOfflineMode] = useState(false);
 
-  componentWillMount() {
+  useEffect(() => {
     $script("https://apis.google.com/js/client.js", () => {
       const gapi = window.gapi;
       if (gapi) {
@@ -38,203 +32,199 @@ class Splash extends React.Component {
           };
 
           gapi.client.init(initSettings).then(() => {
-            let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
-            if (isAuthenticated) {
+            const authInstance = gapi.auth2.getAuthInstance();
+            const authenticated = authInstance.isSignedIn.get();
+            setGapiState(gapi);
+            if (authenticated) {
               try {
                 window.gtag("event", "login", { method: "Google" });
-              } catch {}
-              const userEmail = gapi.auth2
-                .getAuthInstance()
+              } catch (e) {}
+              const email = authInstance
                 .currentUser.get()
                 .getBasicProfile()
                 .getEmail();
-              this.setState({ isAuthenticated, gapi, userEmail });
-              set("userEmail", userEmail);
+              setUserEmail(email);
+              setIsAuthenticated(authenticated);
+              set("userEmail", email);
             } else {
-              this.setState({ isAuthenticated, gapi });
+              setIsAuthenticated(authenticated);
             }
           });
         });
       } else {
-        get("userEmail").then((userEmail) => {
-          this.setState({
-            isAuthenticated: true,
-            offlineMode: true,
-            userEmail,
-          });
+        get("userEmail").then((email) => {
+          setUserEmail(email);
+          setIsAuthenticated(true);
+          setOfflineMode(true);
         });
       }
     });
-  }
+  }, []);
 
-  handleLogin() {
+  const handleLogin = useCallback(() => {
     try {
       window.gtag("event", "sign_up", { method: "Google" });
-    } catch {}
+    } catch (e) {}
+    if (gapiState) {
+      gapiState.auth2
+        .getAuthInstance()
+        .signIn()
+        .then(() => {
+          const authenticated = gapiState.auth2.getAuthInstance().isSignedIn.get();
+          if (authenticated) {
+            const email = gapiState.auth2
+              .getAuthInstance()
+              .currentUser.get()
+              .getBasicProfile()
+              .getEmail();
+            setUserEmail(email);
+            setIsAuthenticated(authenticated);
+            set("userEmail", email);
+            $(".m2-is-signed-out").hide();
+          }
+        });
+    }
+  }, [gapiState]);
 
-    this.state.gapi.auth2
-      .getAuthInstance()
-      .signIn()
-      .then(() => {
-        const isAuthenticated = this.state.gapi.auth2
-          .getAuthInstance()
-          .isSignedIn.get();
-        if (isAuthenticated) {
-          const userEmail = this.state.gapi.auth2
-            .getAuthInstance()
-            .currentUser.get()
-            .getBasicProfile()
-            .getEmail();
-          this.setState({ isAuthenticated, userEmail });
-          set("userEmail", userEmail);
-          $(".m2-is-signed-out").hide();
-        }
-      });
-  }
+  const handleSwitchUser = useCallback(() => {
+    if (gapiState) {
+      gapiState.auth2
+        .getAuthInstance()
+        .signIn({ prompt: "select_account" })
+        .then(() => window.location.reload());
+    }
+  }, [gapiState]);
 
-  handleSwitchUser() {
-    this.state.gapi.auth2
-      .getAuthInstance()
-      .signIn({ prompt: "select_account" })
-      .then(() => {
-        window.location.reload();
-      });
-  }
-
-  handleLogout() {
-    this.state.gapi.auth2
-      .getAuthInstance()
-      .signOut()
-      .then(() =>
-        this.setState({ isAuthenticated: false }, () => {
+  const handleLogout = useCallback(() => {
+    if (gapiState) {
+      gapiState.auth2
+        .getAuthInstance()
+        .signOut()
+        .then(() => {
+          setIsAuthenticated(false);
           $(window).scrollTop(0);
           $("body").removeClass("m2-dark-mode");
-        })
-      );
-  }
+        });
+    }
+  }, [gapiState]);
 
-  render() {
-    return (
-      <div>
-        {this.state.tryItNow && (
-          <MarkThree
-            gapi={this.state.gapi}
-            handleLogout={() => (window.location = "/")}
-            handleLogin={() =>
-              alert(
-                "You're in anonymous mode! To log in please sign in under your google account"
-              )
-            }
-            handleSwitchUser={() =>
-              alert("Sorry! Can't switch users in anonymous mode.")
-            }
-            tryItNow={true}
-            offlineMode={this.state.offlineMode}
-          />
-        )}
-        {!this.state.tryItNow && this.state.isAuthenticated && (
-          <MarkThree
-            key={this.state.userEmail}
-            userEmail={this.state.userEmail}
-            gapi={this.state.gapi}
-            handleLogout={this.handleLogout}
-            handleLogin={this.handleLogin}
-            handleSwitchUser={this.handleSwitchUser}
-            tryItNow={false}
-            offlineMode={this.state.offlineMode}
-          />
-        )}
-        {!this.state.tryItNow && this.state.isAuthenticated === null && (
-          <div className="m2-load-screen">
-            <h1 className="title is-1">
-              <img src={logo} alt="logo" />
-              MarkThree
-              <img src={logo} alt="logo" />
-            </h1>
-          </div>
-        )}
-        {!this.state.tryItNow && this.state.isAuthenticated === false && (
-          <div className="m2-splash-container">
-            <div className="m2-splash">
-              <div className="m2-hero">
-                <h1 className="title is-1">
-                  <img src={logo} alt="logo" />
-                  MarkThree
-                  <img src={logo} alt="logo" />
-                </h1>
-                <p>A seamless, speedy, syncing markdown editor.</p>
-                <div className="m2-cta">
-                  <a
-                    className="button is-primary is-outlined"
-                    href="/try-it-now"
-                  >
-                    Try the demo
-                  </a>
-                  <button
-                    className="button is-primary is-outlined"
-                    onClick={this.handleLogin}
-                  >
-                    <FontAwesomeIcon icon={faGoogle} />
-                    &nbsp;&nbsp;Log in with Google
-                  </button>
+  return (
+    <div>
+      {tryItNow && (
+        <MarkThree
+          gapi={gapiState}
+          handleLogout={() => (window.location = "/")}
+          handleLogin={() =>
+            alert(
+              "You're in anonymous mode! To log in please sign in under your google account"
+            )
+          }
+          handleSwitchUser={() =>
+            alert("Sorry! Can't switch users in anonymous mode.")
+          }
+          tryItNow={true}
+          offlineMode={offlineMode}
+        />
+      )}
+      {!tryItNow && isAuthenticated && (
+        <MarkThree
+          key={userEmail}
+          userEmail={userEmail}
+          gapi={gapiState}
+          handleLogout={handleLogout}
+          handleLogin={handleLogin}
+          handleSwitchUser={handleSwitchUser}
+          tryItNow={false}
+          offlineMode={offlineMode}
+        />
+      )}
+      {!tryItNow && isAuthenticated === null && (
+        <div className="m2-load-screen">
+          <h1 className="title is-1">
+            <img src={logo} alt="logo" />
+            MarkThree
+            <img src={logo} alt="logo" />
+          </h1>
+        </div>
+      )}
+      {!tryItNow && isAuthenticated === false && (
+        <div className="m2-splash-container">
+          <div className="m2-splash">
+            <div className="m2-hero">
+              <h1 className="title is-1">
+                <img src={logo} alt="logo" />
+                MarkThree
+                <img src={logo} alt="logo" />
+              </h1>
+              <p>A seamless, speedy, syncing markdown editor.</p>
+              <div className="m2-cta">
+                <a className="button is-primary is-outlined" href="/try-it-now">
+                  Try the demo
+                </a>
+                <button
+                  className="button is-primary is-outlined"
+                  onClick={handleLogin}
+                >
+                  <FontAwesomeIcon icon={faGoogle} />
+                  &nbsp;&nbsp;Log in with Google
+                </button>
+              </div>
+            </div>
+
+            <div className="m2-tiles">
+              <div className="columns">
+                <div className="column">
+                  <h4 className="title is-4">Seamless</h4>
+                  <p>
+                    Read and edit markdown from a single view. No need to
+                    toggle back and forth.
+                  </p>
+                </div>
+                <div className="column">
+                  <h4 className="title is-4">Speedy</h4>
+                  <p>
+                    Tested on War & Peace, it's built for big docs like work
+                    notes, personal notes, and journals.
+                  </p>
+                </div>
+                <div className="column">
+                  <h4 className="title is-4">Syncing</h4>
+                  <p>
+                    MarkThree is web-native, so it works across devices, and
+                    your docs are always synced.
+                  </p>
                 </div>
               </div>
-
-              <div className="m2-tiles">
-                <div className="columns">
-                  <div className="column">
-                    <h4 className="title is-4">Seamless</h4>
-                    <p>
-                      Read and edit markdown from a single view. No need to
-                      toggle back and forth.
-                    </p>
-                  </div>
-                  <div className="column">
-                    <h4 className="title is-4">Speedy</h4>
-                    <p>
-                      Tested on War & Peace, it's built for big docs like work
-                      notes, personal notes, and journals.
-                    </p>
-                  </div>
-                  <div className="column">
-                    <h4 className="title is-4">Syncing</h4>
-                    <p>
-                      MarkThree is web-native, so it works across devices, and
-                      your docs are always synced.
-                    </p>
-                  </div>
+              <hr />
+              <div className="columns">
+                <div className="column">
+                  <h4 className="title is-4">Private</h4>
+                  <p>
+                    MarkThree is a static app backed by your own Google
+                    Drive&mdash;we don't store any of your data.
+                  </p>
                 </div>
-                <hr />
-                <div className="columns">
-                  <div className="column">
-                    <h4 className="title is-4">Private</h4>
-                    <p>
-                      MarkThree is a static app backed by your own Google
-                      Drive&mdash;we don't store any of your data.
-                    </p>
-                  </div>
-                  <div className="column">
-                    <h4 className="title is-4">Powerful</h4>
-                    <p>
-                      Hashtags, search, reminders, slash commands, and much more
-                      help you stay productive.
-                    </p>
-                  </div>
-                  <div className="column">
-                    <h4 className="title is-4">Free</h4>
-                    <p>
-                      No lock-in&mdash;MarkThree is free and open source, and
-                      you can export your docs at any time.
-                    </p>
-                  </div>
+                <div className="column">
+                  <h4 className="title is-4">Powerful</h4>
+                  <p>
+                    Hashtags, search, reminders, slash commands, and much more
+                    help you stay productive.
+                  </p>
+                </div>
+                <div className="column">
+                  <h4 className="title is-4">Free</h4>
+                  <p>
+                    No lock-in&mdash;MarkThree is free and open source, and
+                    you can export your docs at any time.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    );
-  }
-}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Splash;
