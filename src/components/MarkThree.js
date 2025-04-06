@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Shelf from "./Shelf";
 import shortid from "shortid";
 import Doc from "./Doc";
@@ -18,246 +18,256 @@ import { SettingsModal } from "./modals/Settings";
 import { ContactModal } from "./modals/Contact";
 import { AboutModal } from "./modals/About";
 import { HelpModal } from "./modals/Help";
+
 const tryItNowText = raw("./tryItNow.md");
 
-class MarkThree extends React.Component {
-  constructor(props) {
-    super(props);
+function MarkThree(props) {
+  // useState to hold our component state (merged from the original state)
+  const [state, setState] = useState({
+    gapi: props.gapi,
+    searchString: "",
+    searchResults: [],
+    showShelf: false,
+    darkMode: false,
+    offlineMode: false,
+    spellcheck: true,
+    serif: false,
+    // additional state used later:
+    currentDoc: null,
+    docs: [],
+    appData: {},
+    allLines: [],
+    doc: {},
+    showDocs: false,
+    showSearch: false,
+    showSettings: false,
+    showContact: false,
+    showAbout: false,
+    showHelp: false,
+    goToBlock: null,
+    initialData: null,
+    viewArchive: false,
+  });
 
-    this.openFile = this.openFile.bind(this);
-    this.startNewFile = this.startNewFile.bind(this);
-    this.handleImport = this.handleImport.bind(this);
-    this.toggleArchive = this.toggleArchive.bind(this);
-    this.handleSearch = this.handleSearch.bind(this);
-    this.takeFileAction = this.takeFileAction.bind(this);
-    this.sync = this.sync.bind(this);
-    this.refreshDocs = this.refreshDocs.bind(this);
-    this.setOfflineMode = this.setOfflineMode.bind(this);
-    this.setDarkMode = this.setDarkMode.bind(this);
-    this.handleViewImageFolder = this.handleViewImageFolder.bind(this);
-    this.handleMentionOrHashtagSearch =
-      this.handleMentionOrHashtagSearch.bind(this);
+  // refs for mutable values
+  const syncingRef = useRef(false);
+  const syncUtilsRef = useRef(null);
+  const appDataKey = `appData_${props.userEmail}`;
 
-    window.handleMentionOrHashtagSearch = this.handleMentionOrHashtagSearch;
-
+  // set options for marked (same as in constructor)
+  useEffect(() => {
     marked.setOptions({
       breaks: true,
       smartLists: true,
     });
+  }, []);
 
-    this.state = {
-      gapi: this.props.gapi,
-      searchString: "",
-      searchResults: [],
-      showShelf: false,
-      darkMode: false,
-      offlineMode: false,
-      spellcheck: true,
-      serif: false,
-    };
-  }
+  // componentDidMount equivalent
+  useEffect(() => {
+    get("offlineMode").then((offlineModeRaw) => {
+      let offlineMode = props.tryItNow
+        ? false
+        : (offlineModeRaw && JSON.parse(offlineModeRaw)) || !state.gapi;
+      setState((prev) => ({ ...prev, offlineMode }));
+      syncUtilsRef.current = offlineMode
+        ? syncUtilsOffline()
+        : syncUtils(state.gapi);
 
-  componentDidMount() {
-    this.appDataKey = `appData_${this.props.userEmail}`;
-    get("offlineMode").then((offlineMode) => {
-      offlineMode = !this.props.tryItNow
-        ? (offlineMode && JSON.parse(offlineMode)) || !this.state.gapi
-        : false;
-      this.setState({ offlineMode }, () => {
-        this.syncUtils = this.state.offlineMode
-          ? syncUtilsOffline()
-          : syncUtils(this.state.gapi);
-        const currentDoc = shortid.generate();
-        const defaultAppData = {
-          currentDoc,
-          docs: [{ id: currentDoc, title: false, lastModified: new Date() }],
-          revision: 0,
-          signUpDate: new Date(),
-        };
+      const currentDoc = shortid.generate();
+      const defaultAppData = {
+        currentDoc,
+        docs: [{ id: currentDoc, title: false, lastModified: new Date() }],
+        revision: 0,
+        signUpDate: new Date(),
+      };
 
-        if (!this.props.tryItNow) {
-          this.refreshDocs(defaultAppData);
-        } else {
-          this.setState({ ...defaultAppData, appData: defaultAppData });
-        }
-
-        get("darkMode").then(
-          (value) => value && this.setDarkMode(JSON.parse(value))
-        );
-        get("spellcheck").then(
-          (value) => value && this.setSpellcheck(JSON.parse(value))
-        );
-        get("serif").then((value) => value && this.setSerif(JSON.parse(value)));
-        get("signUpDate").then(
-          (value) => !value && set("signUpDate", JSON.stringify(new Date()))
-        );
-      });
+      if (!props.tryItNow) {
+        refreshDocs(defaultAppData);
+      } else {
+        setState((prev) => ({
+          ...prev,
+          ...defaultAppData,
+          appData: defaultAppData,
+        }));
+      }
+      get("darkMode").then((value) => value && setDarkMode(JSON.parse(value)));
+      get("spellcheck").then(
+        (value) => value && setSpellcheck(JSON.parse(value))
+      );
+      get("serif").then((value) => value && setSerif(JSON.parse(value)));
+      get("signUpDate").then(
+        (value) => !value && set("signUpDate", JSON.stringify(new Date()))
+      );
     });
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  refreshDocs(defaultAppData) {
-    return new Promise((resolve) => {
-      (this.props.tryItNow
-        ? new Promise((resolve) => resolve(_.clone(this.state.appData)))
-        : this.syncUtils.initializeData(this.appDataKey, defaultAppData)
-      ).then((appData) => {
-        Promise.all(
-          appData.docs.map((d) => {
-            return get(d.id);
-          })
-        ).then((docMetaDataFiles) => {
-          appData.docs = appData.docs.map((d, i) => {
-            d.lastModified = docMetaDataFiles[i]
-              ? JSON.parse(docMetaDataFiles[i]).lastModified
-              : d.lastModified;
-            return d;
-          });
-          this.sync(appData, {}).then(resolve);
-        });
-      });
-    });
-  }
-
-  sync(appData, additionalState) {
-    if (!this.syncing) {
-      console.log(`starting sync: ${JSON.stringify(appData)}`);
-      this.syncing = true;
-      this.setState({ ...appData, ...additionalState, appData });
-      return new Promise((resolve) => {
-        if (!this.props.tryItNow) {
-          this.syncUtils
-            .syncByRevision(this.appDataKey, appData)
-            .then((appData) => {
-              console.log(`finished sync: ${JSON.stringify(appData)}`);
-              this.setState({ ...appData, appData }, () => {
-                this.syncing = false;
+  // sync
+  const sync = useCallback(
+    (appData, additionalState) => {
+      if (!syncingRef.current) {
+        console.log(`starting sync: ${JSON.stringify(appData)}`);
+        syncingRef.current = true;
+        setState((prev) => ({
+          ...prev,
+          ...appData,
+          ...additionalState,
+          appData,
+        }));
+        return new Promise((resolve) => {
+          if (!props.tryItNow) {
+            syncUtilsRef.current
+              .syncByRevision(appDataKey, appData)
+              .then((newAppData) => {
+                console.log(`finished sync: ${JSON.stringify(newAppData)}`);
+                setState((prev) => ({
+                  ...prev,
+                  ...newAppData,
+                  appData: newAppData,
+                }));
+                syncingRef.current = false;
                 resolve();
               });
-            });
-        } else {
-          this.syncing = false;
-          resolve();
-        }
-      });
-    } else {
-      // Return a Promise for the recursive call as well
+          } else {
+            syncingRef.current = false;
+            resolve();
+          }
+        });
+      } else {
+        // recursive retry if already syncing
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            sync(appData, additionalState).then(resolve);
+          }, 200);
+        });
+      }
+    },
+    [props.tryItNow, appDataKey]
+  );
+
+  // refreshDocs
+  const refreshDocs = useCallback(
+    (defaultAppData) => {
       return new Promise((resolve) => {
-        setTimeout(() => {
-          this.sync(appData, additionalState).then(resolve);
-        }, 200);
+        (props.tryItNow
+          ? Promise.resolve(_.clone(state.appData))
+          : syncUtilsRef.current.initializeData(appDataKey, defaultAppData)
+        ).then((appData) => {
+          Promise.all(appData.docs.map((d) => get(d.id))).then(
+            (docMetaDataFiles) => {
+              appData.docs = appData.docs.map((d, i) => {
+                d.lastModified = docMetaDataFiles[i]
+                  ? JSON.parse(docMetaDataFiles[i]).lastModified
+                  : d.lastModified;
+                return d;
+              });
+              sync(appData, {}).then(resolve);
+            }
+          );
+        });
+      });
+    },
+    [props.tryItNow, state.appData, appDataKey, sync]
+  );
+
+  // converted methods:
+  const openFile = (id) => {
+    setState((prev) => ({ ...prev, currentDoc: false }));
+    $(window).scrollTop(0);
+    const appData = _.cloneDeep(state.appData);
+    appData.currentDoc = id;
+    sync(appData, { showDocs: false, showShelf: false, initialData: false });
+  };
+
+  const startNewFile = () => {
+    console.log(`old doc: ${JSON.stringify(state.currentDoc)}`);
+    setState((prev) => ({ ...prev, currentDoc: false }));
+    $(window).scrollTop(0);
+    const appData = _.cloneDeep(state.appData);
+    const id = shortid.generate();
+    appData.currentDoc = id;
+    appData.docs.unshift({ id, title: false, lastModified: new Date() });
+    sync(appData, { showDocs: false, initialData: false, showShelf: false });
+  };
+
+  const deleteFile = (fileName) => {
+    const currentDoc = state.currentDoc;
+    setState((prev) => ({ ...prev, currentDoc: false }));
+    const appData = _.cloneDeep(state.appData);
+    appData.docs = appData.docs.filter((file) => file.id !== fileName);
+    if (currentDoc === fileName) {
+      if (appData.docs.length) {
+        appData.currentDoc = appData.docs[0].id;
+      } else {
+        const id = shortid.generate();
+        appData.currentDoc = id;
+        appData.docs.unshift({ id, title: false, lastModified: new Date() });
+      }
+    }
+    sync(appData, { initialData: false });
+    if (!props.tryItNow) {
+      syncUtilsRef.current.find(fileName, (docMetadata) => {
+        syncUtilsRef.current.deleteFiles(docMetadata.pageIds).then(() => {
+          syncUtilsRef.current.deleteFile(fileName);
+        });
       });
     }
-  }
+  };
 
-  openFile(id) {
-    this.setState({ currentDoc: false }, () => {
-      $(window).scrollTop(0);
-      const appData = _.cloneDeep(this.state.appData);
-      appData.currentDoc = id;
-      this.sync(appData, {
-        showDocs: false,
-        showShelf: false,
-        initialData: false,
-      });
-    });
-  }
-
-  startNewFile() {
-    console.log(`old doc: ${JSON.stringify(this.state.currentDoc)}`);
-    this.setState({ currentDoc: false }, () => {
-      console.log(`current doc: ${JSON.stringify(this.state.currentDoc)}`);
-      $(window).scrollTop(0);
-      const appData = _.cloneDeep(this.state.appData);
-      const id = shortid.generate();
-      appData.currentDoc = id;
-      appData.docs.unshift({ id, title: false, lastModified: new Date() });
-      this.sync(appData, {
-        showDocs: false,
-        initialData: false,
-        showShelf: false,
-      });
-    });
-  }
-
-  deleteFile(fileName) {
-    const currentDoc = this.state.currentDoc;
-    this.setState({ currentDoc: false }, () => {
-      const appData = _.cloneDeep(this.state.appData);
-      appData.docs = appData.docs.filter((file) => file.id !== fileName);
-      if (currentDoc === fileName) {
-        if (appData.docs.length) {
-          appData.currentDoc = appData.docs[0].id;
-        } else {
-          const id = shortid.generate();
-          appData.currentDoc = id;
-          appData.docs.unshift({ id, title: false, lastModified: new Date() });
-        }
-      }
-      this.sync(appData, { initialData: false });
-      !this.props.tryItNow &&
-        this.syncUtils.find(fileName, (docMetadata) => {
-          this.syncUtils.deleteFiles(docMetadata.pageIds).then((results) => {
-            this.syncUtils.deleteFile(fileName);
-          });
-        });
-    });
-  }
-
-  handleImport(e) {
+  const handleImport = (e) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const appData = _.cloneDeep(this.state.appData);
+    reader.onload = (ev) => {
+      const appData = _.cloneDeep(state.appData);
       const id = shortid.generate();
       appData.currentDoc = id;
       appData.docs.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ currentDoc: false }, () => {
-        $(window).scrollTop(0);
-        this.sync(appData, {
-          initialData: e.target.result,
-          showDocs: false,
-          showShelf: false,
-        });
+      setState((prev) => ({ ...prev, currentDoc: false }));
+      $(window).scrollTop(0);
+      sync(appData, {
+        initialData: ev.target.result,
+        showDocs: false,
+        showShelf: false,
       });
     };
     reader.readAsText(e.target.files[0]);
-  }
+  };
 
-  setTitle(id, title) {
-    const appData = _.cloneDeep(this.state.appData);
-    appData.file = appData.docs.forEach((f) => {
+  const setTitle = (id, title) => {
+    const appData = _.cloneDeep(state.appData);
+    appData.docs.forEach((f) => {
       if (f.id === id) {
         f.title = title;
       }
     });
-    this.sync(appData, {});
-  }
+    sync(appData, {});
+  };
 
-  toggleArchive(id) {
-    const appData = _.cloneDeep(this.state.appData);
-    appData.file = appData.docs.forEach((f) => {
+  const toggleArchive = (id) => {
+    const appData = _.cloneDeep(state.appData);
+    appData.docs.forEach((f) => {
       if (f.id === id) {
         f.archived = !f.archived;
       }
     });
-    this.sync(appData, { newTitle: false, editTitle: false });
-  }
+    sync(appData, { newTitle: false, editTitle: false });
+  };
 
-  handleSearch(e) {
+  const handleSearch = (e) => {
     e.preventDefault();
-    console.log(this.state.searchString);
+    console.log(state.searchString);
     let searchResults;
-    if (!this.state.searchString) {
-      searchResults = this.state.allLines
-        .filter((id) => this.state.doc[id].startsWith("// "))
-        .map((id) => ({ id, html: this.state.doc[id].replace("// ", "") }))
+    if (!state.searchString) {
+      searchResults = state.allLines
+        .filter((id) => state.doc[id].startsWith("// "))
+        .map((id) => ({ id, html: state.doc[id].replace("// ", "") }))
         .slice(0, 1000);
-    } else if (/^#todo$/i.test(this.state.searchString)) {
+    } else if (/^#todo$/i.test(state.searchString)) {
       let searchRegex = /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s/;
-      searchResults = this.state.allLines
-        .filter((id) => searchRegex.test(this.state.doc[id]))
+      searchResults = state.allLines
+        .filter((id) => searchRegex.test(state.doc[id]))
         .map((id) => ({
           id,
-          html: marked(this.state.doc[id]).replace(
+          html: marked(state.doc[id]).replace(
             searchRegex,
             (m) => `<mark>${m}</mark>`
           ),
@@ -266,72 +276,70 @@ class MarkThree extends React.Component {
     } else {
       const exactMatchRegex = /^"(.+)"$/;
       let searchRegex;
-      if (exactMatchRegex.test(this.state.searchString)) {
+      if (exactMatchRegex.test(state.searchString)) {
         searchRegex = new RegExp(
-          this.state.searchString
+          state.searchString
             .match(exactMatchRegex)[1]
             .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"),
           "ig"
         );
       } else {
-        const keywords = this.state.searchString
+        const keywords = state.searchString
           .split(" ")
-          .map((t) => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")); // comment out regex expressions
+          .map((t) => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"));
         searchRegex = new RegExp(keywords.join("|"), "ig");
       }
-      const whitespaceRegex = new RegExp("^[\\s\\n]*$");
-      searchResults = this.state.allLines
-        .filter((id) => searchRegex.test(this.state.doc[id]))
+      searchResults = state.allLines
+        .filter((id) => searchRegex.test(state.doc[id]))
         .map((id) => ({
           id,
-          html: marked(this.state.doc[id]).replace(
+          html: marked(state.doc[id]).replace(
             searchRegex,
             (m) => `<mark>${m}</mark>`
           ),
         }))
         .slice(0, 1000);
     }
-    this.setState({ searchResults });
-  }
+    setState((prev) => ({ ...prev, searchResults }));
+  };
 
-  takeFileAction(e, file) {
+  const takeFileAction = (e, file) => {
     switch (e.target.value) {
       case "rename":
         var newTitle = prompt("Please select a new file name:");
         if (newTitle) {
-          this.setTitle(file.id, newTitle);
+          setTitle(file.id, newTitle);
         }
         break;
       case "export":
         let lastTag;
         const blocks = [];
-        this.state.allLines.forEach((id, i) => {
+        state.allLines.forEach((id) => {
           const nextTag =
-            $(marked(this.state.doc[id])).length &&
-            $(marked(this.state.doc[id]))[0].tagName;
+            $(marked(state.doc[id])).length &&
+            $(marked(state.doc[id]))[0].tagName;
           if (lastTag === "P" && nextTag === "P") {
-            blocks.push("\n" + this.state.doc[id]);
+            blocks.push("\n" + state.doc[id]);
           } else {
-            blocks.push(this.state.doc[id]);
+            blocks.push(state.doc[id]);
           }
           lastTag = nextTag;
         });
-
         const text = blocks.join("\n");
-        const title =
-          this.state.docs.filter((f) => f.id === this.state.currentDoc).title ||
-          "Untitled";
+        const title = state.docs.filter((f) => f.id === state.currentDoc)[0]
+          ? state.docs.filter((f) => f.id === state.currentDoc)[0].title
+          : "Untitled";
         download(text, `${title}.txt`);
         break;
       case "toggleArchive":
-        this.toggleArchive(file.id);
+        toggleArchive(file.id);
         break;
       case "delete":
         const confirmed = window.confirm(
           `Permanently delete ${file.title || "Untitled"}?`
         );
         if (confirmed) {
-          this.deleteFile(file.id);
+          deleteFile(file.id);
         }
         break;
       default:
@@ -339,185 +347,200 @@ class MarkThree extends React.Component {
           `Invalid action ${e.target.value} executed on file ${file.id}`
         );
     }
-  }
+  };
 
-  setDarkMode(value) {
-    this.setState({ darkMode: value }, () => {
-      this.state.darkMode
-        ? $("body").addClass("m2-dark-mode")
-        : $("body").removeClass("m2-dark-mode");
-      set("darkMode", JSON.stringify(value));
-    });
-  }
+  const setDarkMode = (value) => {
+    setState((prev) => ({ ...prev, darkMode: value }));
+    if (value) {
+      $("body").addClass("m2-dark-mode");
+    } else {
+      $("body").removeClass("m2-dark-mode");
+    }
+    set("darkMode", JSON.stringify(value));
+  };
 
-  setOfflineMode(value, callback) {
+  const setOfflineMode = (value) => {
     return new Promise((resolve) => {
-      this.setState({ offlineMode: value }, () => {
-        this.syncUtils = this.state.offlineMode
-          ? syncUtilsOffline()
-          : syncUtils(this.state.gapi);
-        set("offlineMode", JSON.stringify(value)).then(resolve);
-      });
+      setState((prev) => ({ ...prev, offlineMode: value }));
+      syncUtilsRef.current = value ? syncUtilsOffline() : syncUtils(state.gapi);
+      set("offlineMode", JSON.stringify(value)).then(resolve);
     });
-  }
+  };
 
-  setSpellcheck(value, callback) {
+  const setSpellcheck = (value) => {
     return new Promise((resolve) => {
-      this.setState({ spellcheck: value }, () => {
-        set("spellcheck", JSON.stringify(value)).then(resolve);
-        $("body").attr("spellcheck", this.state.spellcheck);
-      });
+      setState((prev) => ({ ...prev, spellcheck: value }));
+      set("spellcheck", JSON.stringify(value)).then(resolve);
+      $("body").attr("spellcheck", value);
     });
-  }
+  };
 
-  setSerif(value, callback) {
+  const setSerif = (value) => {
     return new Promise((resolve) => {
-      this.setState({ serif: value }, () => {
-        set("serif", JSON.stringify(value)).then(resolve);
-        if (this.state.serif) {
-          $("#m2-doc").addClass("m2-serif");
-        } else {
-          $("#m2-doc").removeClass("m2-serif");
-        }
-      });
+      setState((prev) => ({ ...prev, serif: value }));
+      set("serif", JSON.stringify(value)).then(resolve);
+      if (value) {
+        $("#m2-doc").addClass("m2-serif");
+      } else {
+        $("#m2-doc").removeClass("m2-serif");
+      }
     });
-  }
+  };
 
-  handleViewImageFolder(e) {
-    this.syncUtils.getImagesFolder().then((id) => {
+  const handleViewImageFolder = () => {
+    syncUtilsRef.current.getImagesFolder().then((id) => {
       window.open(`https://drive.google.com/drive/u/0/folders/${id}`, "_blank");
     });
-  }
+  };
 
-  handleMentionOrHashtagSearch(mentionOrHashtag) {
-    this.setState({ searchString: mentionOrHashtag, showSearch: true }, () => {
-      this.handleSearch({ preventDefault: () => {} });
-    });
-  }
+  const handleMentionOrHashtagSearch = (mentionOrHashtag) => {
+    setState((prev) => ({
+      ...prev,
+      searchString: mentionOrHashtag,
+      showSearch: true,
+    }));
+    handleSearch({ preventDefault: () => {} });
+  };
 
-  goToSearchResult(blockId) {
-    this.setState({
+  const goToSearchResult = (blockId) => {
+    setState((prev) => ({
+      ...prev,
       goToBlock: blockId,
       showSearch: false,
       searchString: "",
       searchResults: [],
       showShelf: false,
-    });
-  }
+    }));
+  };
 
-  closeSearchModal() {
-    this.setState({
+  const closeSearchModal = () => {
+    setState((prev) => ({
+      ...prev,
       showSearch: false,
       searchString: "",
       searchResults: [],
-    });
-  }
+    }));
+  };
 
-  render() {
-    return (
-      <div>
-        {this.state.currentDoc && (
-          <Doc
-            key={this.state.currentDoc}
-            currentDoc={this.state.currentDoc}
-            gapi={this.props.gapi}
-            handleLogout={this.props.handleLogout}
-            handleSwitchUser={this.props.handleSwitchUser}
-            handleLogin={this.props.handleLogin}
-            tryItNow={this.props.tryItNow}
-            initialData={
-              this.state.initialData || (this.props.tryItNow && tryItNowText)
-            }
-            goToBlock={this.state.goToBlock}
-            setDocData={(allLines, doc) => this.setState({ allLines, doc })}
-            offlineMode={this.state.offlineMode}
-            spellcheck={this.state.spellcheck}
-          />
-        )}
-        <Shelf
-          handleLogout={this.props.handleLogout}
-          handleSwitchUser={this.props.handleSwitchUser}
-          gapi={this.props.gapi}
-          tryItNow={this.props.tryItNow}
-          offlineMode={this.state.offlineMode}
-          showShelf={this.state.showShelf}
-          setShelf={(val) => this.setState({ showShelf: val })}
-          showDocs={(val) =>
-            this.setState(
-              { showDocs: val, viewArchive: false },
-              this.refreshDocs
-            )
+  // ...existing code for JSX unchanged...
+  return (
+    <div>
+      {state.currentDoc && (
+        <Doc
+          key={state.currentDoc}
+          currentDoc={state.currentDoc}
+          gapi={props.gapi}
+          handleLogout={props.handleLogout}
+          handleSwitchUser={props.handleSwitchUser}
+          handleLogin={props.handleLogin}
+          tryItNow={props.tryItNow}
+          initialData={state.initialData || (props.tryItNow && tryItNowText)}
+          goToBlock={state.goToBlock}
+          setDocData={(allLines, doc) =>
+            setState((prev) => ({ ...prev, allLines, doc }))
           }
-          showSearch={() =>
-            this.setState({ showSearch: true }, () =>
-              this.handleSearch({ preventDefault: () => {} })
-            )
-          }
-          showAbout={() => this.setState({ showAbout: true })}
-          showHelp={() => this.setState({ showHelp: true })}
-          showSettings={() => this.setState({ showSettings: true })}
-          showContact={() => this.setState({ showContact: true })}
+          offlineMode={state.offlineMode}
+          spellcheck={state.spellcheck}
         />
+      )}
+      <Shelf
+        handleLogout={props.handleLogout}
+        handleSwitchUser={props.handleSwitchUser}
+        gapi={props.gapi}
+        tryItNow={props.tryItNow}
+        offlineMode={state.offlineMode}
+        showShelf={state.showShelf}
+        setShelf={(val) => setState((prev) => ({ ...prev, showShelf: val }))}
+        showDocs={(val) =>
+          setState(
+            (prev) => ({ ...prev, showDocs: val, viewArchive: false }),
+            () => refreshDocs()
+          )
+        }
+        showSearch={() =>
+          setState(
+            (prev) => ({ ...prev, showSearch: true }),
+            () => handleSearch({ preventDefault: () => {} })
+          )
+        }
+        showAbout={() => setState((prev) => ({ ...prev, showAbout: true }))}
+        showHelp={() => setState((prev) => ({ ...prev, showHelp: true }))}
+        showSettings={() =>
+          setState((prev) => ({ ...prev, showSettings: true }))
+        }
+        showContact={() => setState((prev) => ({ ...prev, showContact: true }))}
+      />
 
-        {this.state.showSearch && (
-          <SearchModal
-            searchString={this.state.searchString}
-            searchResults={this.state.searchResults}
-            handleSearch={this.handleSearch}
-            setSearchString={(value) => this.setState({ searchString: value })}
-            closeSearch={() => this.closeSearchModal()}
-            goToBlock={(blockId) => this.goToSearchResult(blockId)}
-          />
-        )}
+      {state.showSearch && (
+        <SearchModal
+          searchString={state.searchString}
+          searchResults={state.searchResults}
+          handleSearch={handleSearch}
+          setSearchString={(value) =>
+            setState((prev) => ({ ...prev, searchString: value }))
+          }
+          closeSearch={() => closeSearchModal()}
+          goToBlock={(blockId) => goToSearchResult(blockId)}
+        />
+      )}
 
-        {this.state.showDocs && (
-          <DocsModal
-            closeDocsModal={() => this.setState({ showDocs: false })}
-            handleImport={this.handleImport}
-            startNewFile={this.startNewFile}
-            offlineMode={this.state.offlineMode}
-            docs={this.state.docs}
-            viewArchive={this.state.viewArchive}
-            toggleViewArchive={() =>
-              this.setState({ viewArchive: !this.state.viewArchive })
-            }
-            currentDoc={this.state.currentDoc}
-            openFile={this.openFile}
-            takeFileAction={this.takeFileAction}
-          />
-        )}
+      {state.showDocs && (
+        <DocsModal
+          closeDocsModal={() =>
+            setState((prev) => ({ ...prev, showDocs: false }))
+          }
+          handleImport={handleImport}
+          startNewFile={startNewFile}
+          offlineMode={state.offlineMode}
+          docs={state.docs}
+          viewArchive={state.viewArchive}
+          toggleViewArchive={() =>
+            setState((prev) => ({ ...prev, viewArchive: !prev.viewArchive }))
+          }
+          currentDoc={state.currentDoc}
+          openFile={openFile}
+          takeFileAction={takeFileAction}
+        />
+      )}
 
-        {this.state.showSettings && (
-          <SettingsModal
-            closeSettings={() => this.setState({ showSettings: false })}
-            darkMode={this.state.darkMode}
-            setDarkMode={this.setDarkMode}
-            offlineMode={this.state.offlineMode}
-            setOfflineMode={this.setOfflineMode}
-            spellcheck={this.state.spellcheck}
-            setSpellcheck={this.setSpellcheck}
-            serif={this.state.serif}
-            setSerif={this.setSerif}
-            handleViewImageFolder={this.handleViewImageFolder}
-          />
-        )}
+      {state.showSettings && (
+        <SettingsModal
+          closeSettings={() =>
+            setState((prev) => ({ ...prev, showSettings: false }))
+          }
+          darkMode={state.darkMode}
+          setDarkMode={setDarkMode}
+          offlineMode={state.offlineMode}
+          setOfflineMode={setOfflineMode}
+          spellcheck={state.spellcheck}
+          setSpellcheck={setSpellcheck}
+          serif={state.serif}
+          setSerif={setSerif}
+          handleViewImageFolder={handleViewImageFolder}
+        />
+      )}
 
-        {this.state.showContact && (
-          <ContactModal
-            closeContact={() => this.setState({ showContact: false })}
-          />
-        )}
+      {state.showContact && (
+        <ContactModal
+          closeContact={() =>
+            setState((prev) => ({ ...prev, showContact: false }))
+          }
+        />
+      )}
 
-        {this.state.showAbout && (
-          <AboutModal closeAbout={() => this.setState({ showAbout: false })} />
-        )}
+      {state.showAbout && (
+        <AboutModal
+          closeAbout={() => setState((prev) => ({ ...prev, showAbout: false }))}
+        />
+      )}
 
-        {this.state.showHelp && (
-          <HelpModal closeHelp={() => this.setState({ showHelp: false })} />
-        )}
-      </div>
-    );
-  }
+      {state.showHelp && (
+        <HelpModal
+          closeHelp={() => setState((prev) => ({ ...prev, showHelp: false }))}
+        />
+      )}
+    </div>
+  );
 }
 
 export default MarkThree;
