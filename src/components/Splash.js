@@ -9,11 +9,30 @@ import logo from "../img/logo512.png";
 import $script from "scriptjs";
 
 const Splash = () => {
-  const [tryItNow] = useState(document.location.pathname.startsWith("/try-it-now"));
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [tryItNow] = useState(
+    document.location.pathname.startsWith("/try-it-now")
+  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [gapiState, setGapiState] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [offlineMode, setOfflineMode] = useState(false);
+
+  // add helper function for updating auth state
+  const updateAuthState = (authInstance) => {
+    const authenticated = authInstance.isSignedIn.get();
+    if (authenticated) {
+      try {
+        window.gtag("event", "login", { method: "Google" });
+      } catch (e) {}
+      const email = authInstance.currentUser.get().getBasicProfile().getEmail();
+      setUserEmail(email);
+      setIsAuthenticated(true);
+      set("userEmail", email);
+    } else {
+      setIsAuthenticated(false);
+    }
+  };
 
   useEffect(() => {
     $script("https://apis.google.com/js/client.js", () => {
@@ -33,22 +52,9 @@ const Splash = () => {
 
           gapi.client.init(initSettings).then(() => {
             const authInstance = gapi.auth2.getAuthInstance();
-            const authenticated = authInstance.isSignedIn.get();
             setGapiState(gapi);
-            if (authenticated) {
-              try {
-                window.gtag("event", "login", { method: "Google" });
-              } catch (e) {}
-              const email = authInstance
-                .currentUser.get()
-                .getBasicProfile()
-                .getEmail();
-              setUserEmail(email);
-              setIsAuthenticated(authenticated);
-              set("userEmail", email);
-            } else {
-              setIsAuthenticated(authenticated);
-            }
+            updateAuthState(authInstance);
+            setLoading(false); // set loading to false after auth check
           });
         });
       } else {
@@ -56,6 +62,7 @@ const Splash = () => {
           setUserEmail(email);
           setIsAuthenticated(true);
           setOfflineMode(true);
+          setLoading(false); // set loading to false after fallback auth check
         });
       }
     });
@@ -66,23 +73,13 @@ const Splash = () => {
       window.gtag("event", "sign_up", { method: "Google" });
     } catch (e) {}
     if (gapiState) {
-      gapiState.auth2
-        .getAuthInstance()
-        .signIn()
-        .then(() => {
-          const authenticated = gapiState.auth2.getAuthInstance().isSignedIn.get();
-          if (authenticated) {
-            const email = gapiState.auth2
-              .getAuthInstance()
-              .currentUser.get()
-              .getBasicProfile()
-              .getEmail();
-            setUserEmail(email);
-            setIsAuthenticated(authenticated);
-            set("userEmail", email);
-            $(".m2-is-signed-out").hide();
-          }
-        });
+      const authInstance = gapiState.auth2.getAuthInstance();
+      authInstance.signIn().then(() => {
+        updateAuthState(authInstance);
+        if (authInstance.isSignedIn.get()) {
+          $(".m2-is-signed-out").hide();
+        }
+      });
     }
   }, [gapiState]);
 
@@ -138,16 +135,17 @@ const Splash = () => {
           offlineMode={offlineMode}
         />
       )}
-      {!tryItNow && isAuthenticated === null && (
-        <div className="m2-load-screen">
-          <h1 className="title is-1">
-            <img src={logo} alt="logo" />
-            MarkThree
-            <img src={logo} alt="logo" />
-          </h1>
-        </div>
-      )}
-      {!tryItNow && isAuthenticated === false && (
+      {!tryItNow &&
+        loading && (
+          <div className="m2-load-screen">
+            <h1 className="title is-1">
+              <img src={logo} alt="logo" />
+              MarkThree
+              <img src={logo} alt="logo" />
+            </h1>
+          </div>
+        )}
+      {!tryItNow && !loading && !isAuthenticated && (
         <div className="m2-splash-container">
           <div className="m2-splash">
             <div className="m2-hero">
@@ -176,8 +174,8 @@ const Splash = () => {
                 <div className="column">
                   <h4 className="title is-4">Seamless</h4>
                   <p>
-                    Read and edit markdown from a single view. No need to
-                    toggle back and forth.
+                    Read and edit markdown from a single view. No need to toggle
+                    back and forth.
                   </p>
                 </div>
                 <div className="column">
@@ -214,8 +212,8 @@ const Splash = () => {
                 <div className="column">
                   <h4 className="title is-4">Free</h4>
                   <p>
-                    No lock-in&mdash;MarkThree is free and open source, and
-                    you can export your docs at any time.
+                    No lock-in&mdash;MarkThree is free and open source, and you
+                    can export your docs at any time.
                   </p>
                 </div>
               </div>
