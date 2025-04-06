@@ -1,38 +1,36 @@
 {
   "name": "markthree",
-  "version": "0.1.0",
-  "private": true,
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.32",
-    "@fortawesome/free-brands-svg-icons": "^5.15.1",
-    "@fortawesome/free-regular-svg-icons": "^5.15.1",
-    "@fortawesome/free-solid-svg-icons": "^5.15.1",
-    "@fortawesome/react-fontawesome": "^0.1.12",
-    "async": "^3.2.6",
-    "bulma": "^0.7.5",
+    "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@fortawesome/free-brands-svg-icons": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "async": "^3.2.4",
+    "bulma": "^0.9.4",
     "bulma-switch": "^2.0.0",
-    "dialog-polyfill": "^0.5.4",
-    "dot-prop": "^9.0.0",
+    "dialog-polyfill": "^0.5.6",
     "emoji-dictionary": "^1.0.11",
-    "idb-keyval": "^3.2.0",
+    "idb-keyval": "^6.2.0",
     "in-browser-download": "^2.0.0",
-    "jquery": "^3.5.1",
+    "jquery": "^3.7.0",
     "json-stringify-deterministic": "^1.0.1",
     "lodash": "^4.17.21",
-    "marked": "^0.7.0",
+    "marked": "^5.1.1",
     "md5": "^2.3.0",
-    "moment": "^2.30.1",
-    "node-sass": "^4.14.1",
-    "raw.macro": "^0.3.1",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "react-scripts": "3.1.2",
+    "moment": "^2.29.4",
+    "node-sass": "^7.0.3",
+    "raw.macro": "^0.4.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "scriptjs": "^2.5.9",
     "shortid": "^2.2.17",
-    "showdown": "^1.9.1",
-    "turndown": "^5.0.3",
+    "turndown": "^7.1.1",
     "turndown-plugin-gfm": "^1.0.2",
     "typeface-roboto-slab": "^1.1.13"
+  },
+  "devDependencies": {
+    "eslint-config-react-app": "^7.0.1",
+    "react-scripts": "^5.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -54,5 +52,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
   }
 }

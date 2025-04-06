@@ -5,7 +5,7 @@ import $ from "jquery";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 import _ from "lodash";
-import marked from "marked";
+import { marked } from "marked";
 import stringify from "json-stringify-deterministic";
 import md5 from "md5";
 import moment from "moment";

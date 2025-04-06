@@ -3,7 +3,7 @@ import Shelf from "./Shelf";
 import shortid from "shortid";
 import Doc from "./Doc";
 import "../style/MarkThree.scss";
-import marked from "marked";
+import { marked } from "marked";
 import syncUtils from "../syncUtils/syncUtils";
 import syncUtilsOffline from "../syncUtils/syncUtilsOffline";
 import download from "in-browser-download";

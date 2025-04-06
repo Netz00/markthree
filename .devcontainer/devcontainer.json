@@ -2,9 +2,10 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
 {
     "name": "Node 12",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+    // "build": {
+    //     "dockerfile": "Dockerfile"
+    // },
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
     // Configure tool-specific properties.
@@ -26,10 +27,9 @@
             ]
         }
     },
-    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     "forwardPorts": [
-        3000
+        3000 // Common port for web development
     ],
-    "postCreateCommand": "npm install",
-    "remoteUser": "node"
+    "postCreateCommand": "npm install && npm run build", // Install dependencies and build the project
+    "remoteUser": "node" // Use the 'node' user for better container management
 }
