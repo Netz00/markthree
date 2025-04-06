@@ -143,17 +143,33 @@ function MarkThree(props) {
     [props.tryItNow, state.appData, appDataKey, sync, syncUtilsRef]
   );
 
-  // converted methods:
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log(state.searchString);
-    const searchResults = performSearch(
-      state.searchString,
-      state.allLines,
-      state.doc
-    );
-    setState((prev) => ({ ...prev, searchResults }));
-  };
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      console.log(state.searchString);
+      const searchResults = performSearch(
+        state.searchString,
+        state.allLines,
+        state.doc
+      );
+      setState((prev) => ({ ...prev, searchResults }));
+    },
+    [state.searchString, state.allLines, state.doc]
+  );
+
+  // Add a useEffect to trigger refreshDocs when showDocs is set to true
+  useEffect(() => {
+    if (state.showDocs) {
+      refreshDocs();
+    }
+  }, [state.showDocs, refreshDocs]);
+
+  // Add a useEffect to trigger handleSearch when showSearch is set to true
+  useEffect(() => {
+    if (state.showSearch) {
+      handleSearch({ preventDefault: () => {} });
+    }
+  }, [state.showSearch, handleSearch]);
 
   const takeFileAction = (e, file) => {
     switch (e.target.value) {
@@ -254,15 +270,6 @@ function MarkThree(props) {
     });
   };
 
-  const handleMentionOrHashtagSearch = (mentionOrHashtag) => {
-    setState((prev) => ({
-      ...prev,
-      searchString: mentionOrHashtag,
-      showSearch: true,
-    }));
-    handleSearch({ preventDefault: () => {} });
-  };
-
   const goToSearchResult = (blockId) => {
     setState((prev) => ({
       ...prev,
@@ -312,17 +319,9 @@ function MarkThree(props) {
         showShelf={state.showShelf}
         setShelf={(val) => setState((prev) => ({ ...prev, showShelf: val }))}
         showDocs={(val) =>
-          setState(
-            (prev) => ({ ...prev, showDocs: val, viewArchive: false }),
-            () => refreshDocs()
-          )
+          setState((prev) => ({ ...prev, showDocs: val, viewArchive: false }))
         }
-        showSearch={() =>
-          setState(
-            (prev) => ({ ...prev, showSearch: true }),
-            () => handleSearch({ preventDefault: () => {} })
-          )
-        }
+        showSearch={() => setState((prev) => ({ ...prev, showSearch: true }))}
         showAbout={() => setState((prev) => ({ ...prev, showAbout: true }))}
         showHelp={() => setState((prev) => ({ ...prev, showHelp: true }))}
         showSettings={() =>

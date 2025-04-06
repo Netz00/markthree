@@ -637,15 +637,15 @@ class Doc extends React.Component {
     });
 
     modal.addEventListener("close", () => {
-      const sel = window.getSelection();
       const caretAt = $("#m2-img-dialog").data("selectedBlock");
-      this.state.doc[caretAt] = this.state.doc[caretAt].replace(
+      let newDoc = { ...this.state.doc };
+      newDoc[caretAt] = newDoc[caretAt].replace(
         "/m2img",
         `![alt-text](${modal.returnValue || "imgUrl"})`
       );
-      this.setState({ doc: this.state.doc }, () => {
+      this.setState({ doc: newDoc }, () => {
         this.initializeFromDocList(
-          this.state.allLines.map((id) => ({ id, text: this.state.doc[id] })),
+          this.state.allLines.map((id) => ({ id, text: newDoc[id] })),
           caretAt
         );
       });
@@ -666,15 +666,15 @@ class Doc extends React.Component {
     });
 
     dateModal.addEventListener("close", () => {
-      const sel = window.getSelection();
       const caretAt = $("#m2-date-dialog").data("selectedBlock");
-      this.state.doc[caretAt] = this.state.doc[caretAt].replace(
+      let newDoc = { ...this.state.doc };
+      newDoc[caretAt] = newDoc[caretAt].replace(
         "/m2date",
         dateModal.returnValue ? moment(dateModal.returnValue).format("LL") : ""
       );
-      this.setState({ doc: this.state.doc }, () => {
+      this.setState({ doc: newDoc }, () => {
         this.initializeFromDocList(
-          this.state.allLines.map((id) => ({ id, text: this.state.doc[id] })),
+          this.state.allLines.map((id) => ({ id, text: newDoc[id] })),
           caretAt
         );
       });
@@ -1312,7 +1312,7 @@ class Doc extends React.Component {
         </div>
         <div className="m2-is-signed-out" style={{ display: "none" }}>
           You've been signed out.{" "}
-          <a onClick={this.props.handleLogin}>Sign back in</a>
+          <a href="#" onClick={this.props.handleLogin}>Sign back in</a>
         </div>
         <div
           className="m2-reminder"
@@ -1320,12 +1320,12 @@ class Doc extends React.Component {
           style={{ display: "none" }}
         >
           <div>
-            You have a reminder. <a onClick={this.viewReminder}>View</a>
+            You have a reminder. <a href="#" onClick={this.viewReminder}>View</a>
           </div>
           <div className="m2-reminder-snippet">
             <em></em>
           </div>
-          <a className="m2-close-reminder" onClick={this.closeReminder}>
+          <a href="#" className="m2-close-reminder" onClick={this.closeReminder}>
             <FontAwesomeIcon icon={faTimes} />
           </a>
         </div>
