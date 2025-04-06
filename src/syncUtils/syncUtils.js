@@ -19,11 +19,13 @@ function initialize(gapi) {
   async function executeRequest(request) {
     return new Promise((resolve, reject) => {
       request.execute((result, error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
+        resolve(result);
+
+        // if (error) {
+        //   reject(error);
+        // } else {
+        //   resolve(result);
+        // }
       });
     });
   }
