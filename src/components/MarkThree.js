@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Shelf from "./Shelf";
 import shortid from "shortid";
 import Doc from "./Doc";
@@ -18,6 +18,9 @@ import { SettingsModal } from "./modals/Settings";
 import { ContactModal } from "./modals/Contact";
 import { AboutModal } from "./modals/About";
 import { HelpModal } from "./modals/Help";
+import useSync from "../hooks/useSync";
+import useFileActions from "../hooks/useFileActions";
+import { performSearch } from "../utils/searchUtils";
 
 const tryItNowText = raw("./tryItNow.md");
 
@@ -50,11 +53,25 @@ function MarkThree(props) {
   });
 
   // refs for mutable values
-  const syncingRef = useRef(false);
-  const syncUtilsRef = useRef(null);
   const appDataKey = `appData_${props.userEmail}`;
 
-  // set options for marked (same as in constructor)
+  // NEW: use extracted hooks
+  const { initSync, sync, syncUtilsRef } = useSync(
+    props.gapi,
+    props.tryItNow,
+    appDataKey,
+    setState
+  );
+  const {
+    openFile,
+    startNewFile,
+    deleteFile,
+    handleImport,
+    setTitle,
+    toggleArchive,
+  } = useFileActions(state.appData, setState, sync);
+
+  // set options for marked (same as before)
   useEffect(() => {
     marked.setOptions({
       breaks: true,
@@ -69,9 +86,8 @@ function MarkThree(props) {
         ? false
         : (offlineModeRaw && JSON.parse(offlineModeRaw)) || !state.gapi;
       setState((prev) => ({ ...prev, offlineMode }));
-      syncUtilsRef.current = offlineMode
-        ? syncUtilsOffline()
-        : syncUtils(state.gapi);
+      // Use extracted initSync instead of assigning syncUtilsRef.current manually
+      initSync(offlineMode);
 
       const currentDoc = shortid.generate();
       const defaultAppData = {
@@ -102,50 +118,7 @@ function MarkThree(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // sync
-  const sync = useCallback(
-    (appData, additionalState) => {
-      if (!syncingRef.current) {
-        console.log(`starting sync: ${JSON.stringify(appData)}`);
-        syncingRef.current = true;
-        setState((prev) => ({
-          ...prev,
-          ...appData,
-          ...additionalState,
-          appData,
-        }));
-        return new Promise((resolve) => {
-          if (!props.tryItNow) {
-            syncUtilsRef.current
-              .syncByRevision(appDataKey, appData)
-              .then((newAppData) => {
-                console.log(`finished sync: ${JSON.stringify(newAppData)}`);
-                setState((prev) => ({
-                  ...prev,
-                  ...newAppData,
-                  appData: newAppData,
-                }));
-                syncingRef.current = false;
-                resolve();
-              });
-          } else {
-            syncingRef.current = false;
-            resolve();
-          }
-        });
-      } else {
-        // recursive retry if already syncing
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            sync(appData, additionalState).then(resolve);
-          }, 200);
-        });
-      }
-    },
-    [props.tryItNow, appDataKey]
-  );
-
-  // refreshDocs
+  // refreshDocs now uses syncUtilsRef.current from hook
   const refreshDocs = useCallback(
     (defaultAppData) => {
       return new Promise((resolve) => {
@@ -167,139 +140,18 @@ function MarkThree(props) {
         });
       });
     },
-    [props.tryItNow, state.appData, appDataKey, sync]
+    [props.tryItNow, state.appData, appDataKey, sync, syncUtilsRef]
   );
 
   // converted methods:
-  const openFile = (id) => {
-    setState((prev) => ({ ...prev, currentDoc: false }));
-    $(window).scrollTop(0);
-    const appData = _.cloneDeep(state.appData);
-    appData.currentDoc = id;
-    sync(appData, { showDocs: false, showShelf: false, initialData: false });
-  };
-
-  const startNewFile = () => {
-    console.log(`old doc: ${JSON.stringify(state.currentDoc)}`);
-    setState((prev) => ({ ...prev, currentDoc: false }));
-    $(window).scrollTop(0);
-    const appData = _.cloneDeep(state.appData);
-    const id = shortid.generate();
-    appData.currentDoc = id;
-    appData.docs.unshift({ id, title: false, lastModified: new Date() });
-    sync(appData, { showDocs: false, initialData: false, showShelf: false });
-  };
-
-  const deleteFile = (fileName) => {
-    const currentDoc = state.currentDoc;
-    setState((prev) => ({ ...prev, currentDoc: false }));
-    const appData = _.cloneDeep(state.appData);
-    appData.docs = appData.docs.filter((file) => file.id !== fileName);
-    if (currentDoc === fileName) {
-      if (appData.docs.length) {
-        appData.currentDoc = appData.docs[0].id;
-      } else {
-        const id = shortid.generate();
-        appData.currentDoc = id;
-        appData.docs.unshift({ id, title: false, lastModified: new Date() });
-      }
-    }
-    sync(appData, { initialData: false });
-    if (!props.tryItNow) {
-      syncUtilsRef.current.find(fileName, (docMetadata) => {
-        syncUtilsRef.current.deleteFiles(docMetadata.pageIds).then(() => {
-          syncUtilsRef.current.deleteFile(fileName);
-        });
-      });
-    }
-  };
-
-  const handleImport = (e) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const appData = _.cloneDeep(state.appData);
-      const id = shortid.generate();
-      appData.currentDoc = id;
-      appData.docs.unshift({ id, title: false, lastModified: new Date() });
-      setState((prev) => ({ ...prev, currentDoc: false }));
-      $(window).scrollTop(0);
-      sync(appData, {
-        initialData: ev.target.result,
-        showDocs: false,
-        showShelf: false,
-      });
-    };
-    reader.readAsText(e.target.files[0]);
-  };
-
-  const setTitle = (id, title) => {
-    const appData = _.cloneDeep(state.appData);
-    appData.docs.forEach((f) => {
-      if (f.id === id) {
-        f.title = title;
-      }
-    });
-    sync(appData, {});
-  };
-
-  const toggleArchive = (id) => {
-    const appData = _.cloneDeep(state.appData);
-    appData.docs.forEach((f) => {
-      if (f.id === id) {
-        f.archived = !f.archived;
-      }
-    });
-    sync(appData, { newTitle: false, editTitle: false });
-  };
-
   const handleSearch = (e) => {
     e.preventDefault();
     console.log(state.searchString);
-    let searchResults;
-    if (!state.searchString) {
-      searchResults = state.allLines
-        .filter((id) => state.doc[id].startsWith("// "))
-        .map((id) => ({ id, html: state.doc[id].replace("// ", "") }))
-        .slice(0, 1000);
-    } else if (/^#todo$/i.test(state.searchString)) {
-      let searchRegex = /(?:[-*+]|(?:[0-9]+\.))\s+\[\s\]\s/;
-      searchResults = state.allLines
-        .filter((id) => searchRegex.test(state.doc[id]))
-        .map((id) => ({
-          id,
-          html: marked(state.doc[id]).replace(
-            searchRegex,
-            (m) => `<mark>${m}</mark>`
-          ),
-        }))
-        .slice(0, 1000);
-    } else {
-      const exactMatchRegex = /^"(.+)"$/;
-      let searchRegex;
-      if (exactMatchRegex.test(state.searchString)) {
-        searchRegex = new RegExp(
-          state.searchString
-            .match(exactMatchRegex)[1]
-            .replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"),
-          "ig"
-        );
-      } else {
-        const keywords = state.searchString
-          .split(" ")
-          .map((t) => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"));
-        searchRegex = new RegExp(keywords.join("|"), "ig");
-      }
-      searchResults = state.allLines
-        .filter((id) => searchRegex.test(state.doc[id]))
-        .map((id) => ({
-          id,
-          html: marked(state.doc[id]).replace(
-            searchRegex,
-            (m) => `<mark>${m}</mark>`
-          ),
-        }))
-        .slice(0, 1000);
-    }
+    const searchResults = performSearch(
+      state.searchString,
+      state.allLines,
+      state.doc
+    );
     setState((prev) => ({ ...prev, searchResults }));
   };
 
@@ -339,7 +191,16 @@ function MarkThree(props) {
           `Permanently delete ${file.title || "Untitled"}?`
         );
         if (confirmed) {
+          // Delete from local state using extracted hook function:
           deleteFile(file.id);
+          // Now handle deletion from external storage:
+          if (!props.tryItNow) {
+            syncUtilsRef.current.find(file.id, (docMetadata) => {
+              syncUtilsRef.current.deleteFiles(docMetadata.pageIds).then(() => {
+                syncUtilsRef.current.deleteFile(file.id);
+              });
+            });
+          }
         }
         break;
       default:
@@ -422,7 +283,6 @@ function MarkThree(props) {
     }));
   };
 
-  // ...existing code for JSX unchanged...
   return (
     <div>
       {state.currentDoc && (
@@ -490,7 +350,7 @@ function MarkThree(props) {
             setState((prev) => ({ ...prev, showDocs: false }))
           }
           handleImport={handleImport}
-          startNewFile={startNewFile}
+          startNewFile={startNewFile} // from useFileActions hook
           offlineMode={state.offlineMode}
           docs={state.docs}
           viewArchive={state.viewArchive}
@@ -498,7 +358,7 @@ function MarkThree(props) {
             setState((prev) => ({ ...prev, viewArchive: !prev.viewArchive }))
           }
           currentDoc={state.currentDoc}
-          openFile={openFile}
+          openFile={openFile} // from useFileActions hook
           takeFileAction={takeFileAction}
         />
       )}
