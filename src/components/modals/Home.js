@@ -1,9 +1,9 @@
-import React from "react";
-import "../../style/Splash.scss";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGoogle } from "@fortawesome/free-brands-svg-icons";
+import React from 'react'
+import '../../style/Splash.scss'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGoogle } from '@fortawesome/free-brands-svg-icons'
 
-export const Home = ({handleLogin}) => {
+export const Home = ({ handleLogin }) => {
   return (
     <div className="m2-splash-container">
       <div className="m2-splash">
@@ -79,5 +79,5 @@ export const Home = ({handleLogin}) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

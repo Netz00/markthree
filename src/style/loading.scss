@@ -1,4 +1,4 @@
-@import "./base.scss";
+@import './base.scss';
 
 @keyframes loading {
   from {
@@ -25,7 +25,7 @@
   height: 5px;
   background-color: lighten($primary, 10%);
   .bar {
-    content: "";
+    content: '';
     display: inline;
     position: absolute;
     width: 0;

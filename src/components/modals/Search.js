@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 export const SearchModal = ({
   searchString,
@@ -58,5 +58,5 @@ export const SearchModal = ({
         </section>
       </div>
     </div>
-  );
-};
+  )
+}

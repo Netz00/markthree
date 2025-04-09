@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 export const HelpModal = (closeHelp) => {
   return (
@@ -144,11 +144,11 @@ And underlined text <u>like this</u>
 
           <h5>Text Tricks</h5>
           <p>
-            MarkThree expands the strings <code>/today</code> and{" "}
+            MarkThree expands the strings <code>/today</code> and{' '}
             <code>/now</code> into the current date or date and time for your
             locale. You can also use <code>/date</code> to bring up a date
             picker&mdash;this is especially handy when you're setting reminders.
-            Also, to make things easier to find later, <code>#hashtags</code>{" "}
+            Also, to make things easier to find later, <code>#hashtags</code>{' '}
             and <code>@mentions</code> autocomplete. You can also search for and
             enter emojis with colons like this: <code>:emojis:</code>
           </p>
@@ -164,5 +164,5 @@ And underlined text <u>like this</u>
         </section>
       </div>
     </div>
-  );
-};
+  )
+}

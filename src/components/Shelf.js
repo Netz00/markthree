@@ -49,7 +49,7 @@ const Shelf = (props) => {
           setUserProfile({
             userEmail,
             userName,
-            photoUrl: "/img/user.png",
+            photoUrl: '/img/user.png',
           })
         }
       }

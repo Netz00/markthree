@@ -1,5 +1,5 @@
-import async from "async";
-import { get, set, del } from "idb-keyval";
+import async from 'async'
+import { get, set, del } from 'idb-keyval'
 
 function initialize() {
   /**
@@ -9,11 +9,11 @@ function initialize() {
    */
   async function findOrFetch(name) {
     try {
-      const localVersion = await get(name);
-      return localVersion ? JSON.parse(localVersion) : false;
+      const localVersion = await get(name)
+      return localVersion ? JSON.parse(localVersion) : false
     } catch (error) {
-      console.error(`Error fetching ${name}:`, error);
-      return false;
+      console.error(`Error fetching ${name}:`, error)
+      return false
     }
   }
 
@@ -24,14 +24,14 @@ function initialize() {
    */
   function findOrFetchFiles(names) {
     const tasks = names.map((name) => async () => {
-      const result = await findOrFetch(name);
+      const result = await findOrFetch(name)
       if (!result) {
-        throw new Error(`Could not find file ${name}`);
+        throw new Error(`Could not find file ${name}`)
       }
-      return result;
-    });
+      return result
+    })
 
-    return async.series(tasks);
+    return async.series(tasks)
   }
 
   /**
@@ -41,11 +41,11 @@ function initialize() {
    */
   async function deleteFile(name) {
     try {
-      await del(name);
-      return { status: 204 }; // Simulate HTTP 204 No Content success response
+      await del(name)
+      return { status: 204 } // Simulate HTTP 204 No Content success response
     } catch (error) {
-      console.error(`Error deleting ${name}:`, error);
-      throw error;
+      console.error(`Error deleting ${name}:`, error)
+      throw error
     }
   }
 
@@ -57,20 +57,20 @@ function initialize() {
   function deleteFiles(names) {
     const tasks = names.map((name) => async () => {
       try {
-        const result = await deleteFile(name);
+        const result = await deleteFile(name)
 
         // Add a delay to simulate network latency
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
         if (result.status !== 204) {
-          throw new Error(`Delete request failed for ${name}`);
+          throw new Error(`Delete request failed for ${name}`)
         }
       } catch (error) {
-        throw new Error(`Delete request failed for ${name}: ${error.message}`);
+        throw new Error(`Delete request failed for ${name}: ${error.message}`)
       }
-    });
+    })
 
-    return async.series(tasks);
+    return async.series(tasks)
   }
 
   /**
@@ -81,11 +81,11 @@ function initialize() {
    */
   async function initializeData(name, defaultData) {
     try {
-      const cachedData = await get(name);
-      return cachedData ? JSON.parse(cachedData) : defaultData;
+      const cachedData = await get(name)
+      return cachedData ? JSON.parse(cachedData) : defaultData
     } catch (error) {
-      console.error(`Error initializing ${name}:`, error);
-      return defaultData;
+      console.error(`Error initializing ${name}:`, error)
+      return defaultData
     }
   }
 
@@ -97,12 +97,12 @@ function initialize() {
    */
   async function syncByRevision(name, newData) {
     try {
-      newData.revision++;
-      await set(name, JSON.stringify(newData));
-      return newData;
+      newData.revision++
+      await set(name, JSON.stringify(newData))
+      return newData
     } catch (error) {
-      console.error(`Error syncing ${name}:`, error);
-      throw error;
+      console.error(`Error syncing ${name}:`, error)
+      throw error
     }
   }
 
@@ -113,7 +113,7 @@ function initialize() {
    */
   async function createFiles(files) {
     // Placeholder implementation
-    return;
+    return
   }
 
   /**
@@ -122,7 +122,7 @@ function initialize() {
    */
   async function createImage() {
     // Placeholder implementation
-    return;
+    return
   }
 
   return {
@@ -134,7 +134,7 @@ function initialize() {
     findOrFetchFiles,
     syncByRevision,
     initializeData,
-  };
+  }
 }
 
-export default initialize;
+export default initialize

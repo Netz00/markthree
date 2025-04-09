@@ -1,9 +1,9 @@
-import { get, set, del } from "idb-keyval";
+import { get, set, del } from 'idb-keyval'
 
 // Constants for multipart request formatting
-const boundary = "-------314159265358979323846"; // arbitary boundary string
-const delimiter = "\r\n--" + boundary + "\r\n";
-const close_delim = "\r\n--" + boundary + "--";
+const boundary = '-------314159265358979323846' // arbitary boundary string
+const delimiter = '\r\n--' + boundary + '\r\n'
+const close_delim = '\r\n--' + boundary + '--'
 
 /**
  * Initialize Google API sync utilities
@@ -19,15 +19,15 @@ function initialize(gapi) {
   async function executeRequest(request) {
     return new Promise((resolve, reject) => {
       request.execute((result, error) => {
-        resolve(result);
+        resolve(result)
 
         // if (error) {
         //   reject(error);
         // } else {
         //   resolve(result);
         // }
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -39,30 +39,30 @@ function initialize(gapi) {
   async function create(name, data) {
     const metadata = {
       name,
-      mimeType: "application/json",
-      parents: ["appDataFolder"],
-    };
+      mimeType: 'application/json',
+      parents: ['appDataFolder'],
+    }
 
     const multipartRequestBody =
       delimiter +
-      "Content-Type: application/json\r\n\r\n" +
+      'Content-Type: application/json\r\n\r\n' +
       JSON.stringify(metadata) +
       delimiter +
-      "Content-Type: application/json\r\n\r\n" +
+      'Content-Type: application/json\r\n\r\n' +
       JSON.stringify(data) +
-      close_delim;
+      close_delim
 
     const request = gapi.client.request({
-      path: "/upload/drive/v3/files",
-      method: "POST",
-      params: { uploadType: "multipart" },
+      path: '/upload/drive/v3/files',
+      method: 'POST',
+      params: { uploadType: 'multipart' },
       headers: {
-        "Content-Type": `multipart/related; boundary="${boundary}"`,
+        'Content-Type': `multipart/related; boundary="${boundary}"`,
       },
       body: multipartRequestBody,
-    });
+    })
 
-    return executeRequest(request);
+    return executeRequest(request)
   }
 
   /**
@@ -73,45 +73,45 @@ function initialize(gapi) {
    */
   async function createImage(name, dataUrl) {
     try {
-      const imageFolderId = await getImagesFolder();
+      const imageFolderId = await getImagesFolder()
 
-      const mimeTypeMatch = dataUrl.match(/data:(image\/[a-z]+);/);
+      const mimeTypeMatch = dataUrl.match(/data:(image\/[a-z]+);/)
       if (!mimeTypeMatch) {
-        throw new Error("Invalid data URL format");
+        throw new Error('Invalid data URL format')
       }
 
-      const mimeType = mimeTypeMatch[1];
-      const data = dataUrl.split(",")[1];
+      const mimeType = mimeTypeMatch[1]
+      const data = dataUrl.split(',')[1]
       const metadata = {
         name,
         mimeType,
         parents: [imageFolderId],
-      };
+      }
 
       const multipartRequestBody =
         delimiter +
-        "Content-Type: application/json\r\n\r\n" +
+        'Content-Type: application/json\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
-        "Content-Transfer-Encoding: base64\n" +
+        'Content-Transfer-Encoding: base64\n' +
         `Content-Type: ${mimeType}\r\n\r\n` +
         data +
-        close_delim;
+        close_delim
 
       const request = gapi.client.request({
-        path: "/upload/drive/v3/files",
-        method: "POST",
-        params: { uploadType: "multipart" },
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: { uploadType: 'multipart' },
         headers: {
-          "Content-Type": `multipart/related; boundary="${boundary}"`,
+          'Content-Type': `multipart/related; boundary="${boundary}"`,
         },
         body: multipartRequestBody,
-      });
+      })
 
-      return executeRequest(request);
+      return executeRequest(request)
     } catch (error) {
-      console.error("Error creating image:", error);
-      throw error;
+      console.error('Error creating image:', error)
+      throw error
     }
   }
 
@@ -123,26 +123,26 @@ function initialize(gapi) {
     try {
       const response = await gapi.client.drive.files.list({
         q: `name='MarkThree-Media'`,
-      });
+      })
 
       if (response.result.files.length) {
-        return response.result.files[0].id;
+        return response.result.files[0].id
       } else {
         const metadata = {
-          name: "MarkThree-Media",
-          mimeType: "application/vnd.google-apps.folder",
-        };
+          name: 'MarkThree-Media',
+          mimeType: 'application/vnd.google-apps.folder',
+        }
 
         const file = await gapi.client.drive.files.create({
           resource: metadata,
-          fields: "id",
-        });
+          fields: 'id',
+        })
 
-        return file.result.id;
+        return file.result.id
       }
     } catch (error) {
-      console.error("Error getting images folder:", error);
-      throw error;
+      console.error('Error getting images folder:', error)
+      throw error
     }
   }
 
@@ -155,37 +155,37 @@ function initialize(gapi) {
   async function update(fileId, data) {
     try {
       const metadata = {
-        mimeType: "application/json",
-      };
+        mimeType: 'application/json',
+      }
 
       const multipartRequestBody =
         delimiter +
-        "Content-Type: application/json\r\n\r\n" +
+        'Content-Type: application/json\r\n\r\n' +
         JSON.stringify(metadata) +
         delimiter +
-        "Content-Type: application/json\r\n\r\n" +
+        'Content-Type: application/json\r\n\r\n' +
         JSON.stringify(data) +
-        close_delim;
+        close_delim
 
       const request = gapi.client.request({
         path: `/upload/drive/v3/files/${fileId}`,
-        method: "PATCH",
-        params: { uploadType: "multipart" },
+        method: 'PATCH',
+        params: { uploadType: 'multipart' },
         headers: {
-          "Content-Type": `multipart/related; boundary="${boundary}"`,
+          'Content-Type': `multipart/related; boundary="${boundary}"`,
         },
         body: multipartRequestBody,
-      });
+      })
 
-      const result = await executeRequest(request);
+      const result = await executeRequest(request)
       // Ensure we have a proper result - some errors might come back with 200 status
       if (!result || result instanceof Error) {
-        throw result || new Error("Unknown error during file update");
+        throw result || new Error('Unknown error during file update')
       }
-      return result;
+      return result
     } catch (error) {
-      console.error(`Error updating file ${fileId}:`, error);
-      throw error;
+      console.error(`Error updating file ${fileId}:`, error)
+      throw error
     }
   }
 
@@ -198,24 +198,24 @@ function initialize(gapi) {
     try {
       const response = await gapi.client.drive.files.list({
         q: `name='${name}'`,
-        spaces: "appDataFolder",
-      });
+        spaces: 'appDataFolder',
+      })
 
-      console.log(response);
+      console.log(response)
 
       if (response.result.files.length) {
         const fileData = await gapi.client.drive.files.get({
           fileId: response.result.files[0].id,
-          alt: "media",
-        });
+          alt: 'media',
+        })
 
-        return fileData.result;
+        return fileData.result
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      console.error("Error finding file:", error);
-      throw error;
+      console.error('Error finding file:', error)
+      throw error
     }
   }
 
@@ -228,18 +228,18 @@ function initialize(gapi) {
     try {
       const response = await gapi.client.drive.files.list({
         q: `name contains '${docId}'`,
-        spaces: "appDataFolder",
+        spaces: 'appDataFolder',
         pageSize: 1000,
-      });
+      })
 
-      console.log(response);
+      console.log(response)
 
       return response.result.files
         .map((f) => f.name)
-        .filter((name) => name !== docId);
+        .filter((name) => name !== docId)
     } catch (error) {
-      console.error("Error getting pages for document:", error);
-      throw error;
+      console.error('Error getting pages for document:', error)
+      throw error
     }
   }
 
@@ -250,16 +250,16 @@ function initialize(gapi) {
    */
   async function findOrFetch(name) {
     try {
-      const localVersion = await get(name);
+      const localVersion = await get(name)
 
       if (localVersion) {
-        return JSON.parse(localVersion);
+        return JSON.parse(localVersion)
       } else {
-        return find(name);
+        return find(name)
       }
     } catch (error) {
-      console.error(`Error finding or fetching ${name}:`, error);
-      throw error;
+      console.error(`Error finding or fetching ${name}:`, error)
+      throw error
     }
   }
 
@@ -271,18 +271,18 @@ function initialize(gapi) {
   async function findOrFetchFiles(names) {
     try {
       const tasks = names.map((name) => async () => {
-        const result = await findOrFetch(name);
+        const result = await findOrFetch(name)
         if (result) {
-          return result;
+          return result
         } else {
-          throw new Error(`Could not find file ${name}`);
+          throw new Error(`Could not find file ${name}`)
         }
-      });
+      })
 
-      return await runSequentially(tasks);
+      return await runSequentially(tasks)
     } catch (error) {
-      console.error("Error fetching files:", error);
-      throw error;
+      console.error('Error fetching files:', error)
+      throw error
     }
   }
 
@@ -292,11 +292,11 @@ function initialize(gapi) {
    * @returns {Promise<Array>} - Promise resolving to array of results
    */
   async function runSequentially(tasks) {
-    const results = [];
+    const results = []
     for (const task of tasks) {
-      results.push(await task());
+      results.push(await task())
     }
-    return results;
+    return results
   }
 
   /**
@@ -306,25 +306,25 @@ function initialize(gapi) {
    */
   async function deleteFile(name) {
     try {
-      await del(name);
+      await del(name)
 
       const response = await gapi.client.drive.files.list({
         q: `name='${name}'`,
-        spaces: "appDataFolder",
-      });
+        spaces: 'appDataFolder',
+      })
 
-      console.log(response);
+      console.log(response)
 
       if (response.result.files.length) {
         return gapi.client.drive.files.delete({
           fileId: response.result.files[0].id,
-        });
+        })
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      console.error(`Error deleting file ${name}:`, error);
-      throw error;
+      console.error(`Error deleting file ${name}:`, error)
+      throw error
     }
   }
 
@@ -336,18 +336,18 @@ function initialize(gapi) {
   async function deleteFiles(names) {
     try {
       const tasks = names.map((name) => async () => {
-        const result = await deleteFile(name);
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const result = await deleteFile(name)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
 
         if (!(result.status === 204)) {
-          throw new Error(`Delete request failed for ${name}`);
+          throw new Error(`Delete request failed for ${name}`)
         }
-      });
+      })
 
-      return await runSequentially(tasks);
+      return await runSequentially(tasks)
     } catch (error) {
-      console.error("Error deleting files:", error);
-      throw error;
+      console.error('Error deleting files:', error)
+      throw error
     }
   }
 
@@ -359,16 +359,16 @@ function initialize(gapi) {
   async function createFiles(files) {
     try {
       const tasks = files.map((file) => async () => {
-        const result = await create(file.name, file.data);
+        const result = await create(file.name, file.data)
         if (!result.name) {
-          throw new Error(`Create request failed for ${file.name}`);
+          throw new Error(`Create request failed for ${file.name}`)
         }
-      });
+      })
 
-      return await runSequentially(tasks);
+      return await runSequentially(tasks)
     } catch (error) {
-      console.error("Error creating files:", error);
-      throw error;
+      console.error('Error creating files:', error)
+      throw error
     }
   }
 
@@ -380,46 +380,46 @@ function initialize(gapi) {
    */
   async function initializeData(name, defaultData) {
     try {
-      const remoteData = await find(name);
-      const cachedDataStr = await get(name);
-      let cachedData = cachedDataStr && JSON.parse(cachedDataStr);
+      const remoteData = await find(name)
+      const cachedDataStr = await get(name)
+      let cachedData = cachedDataStr && JSON.parse(cachedDataStr)
 
       // normal page reload
       if (cachedData && remoteData) {
         if (remoteData.revision >= cachedData.revision) {
-          return remoteData;
+          return remoteData
         } else {
-          return cachedData;
+          return cachedData
         }
       }
 
       // file does not yet exist on server
       if (cachedData && !remoteData) {
-        const response = await create(name, cachedData);
-        console.log(response);
-        cachedData.fileId = response.id;
-        await set(name, JSON.stringify(cachedData));
-        return syncByRevision(name, cachedData);
+        const response = await create(name, cachedData)
+        console.log(response)
+        cachedData.fileId = response.id
+        await set(name, JSON.stringify(cachedData))
+        return syncByRevision(name, cachedData)
       }
 
       // new device
       if (!cachedData && remoteData) {
-        await set(name, JSON.stringify(remoteData));
-        return remoteData;
+        await set(name, JSON.stringify(remoteData))
+        return remoteData
       }
 
       // app being loaded for the first time
       if (!cachedData && !remoteData) {
-        await set(name, JSON.stringify(defaultData));
-        const response = await create(name, defaultData);
-        console.log(response);
-        defaultData.fileId = response.id;
-        await set(name, JSON.stringify(defaultData));
-        return syncByRevision(name, defaultData);
+        await set(name, JSON.stringify(defaultData))
+        const response = await create(name, defaultData)
+        console.log(response)
+        defaultData.fileId = response.id
+        await set(name, JSON.stringify(defaultData))
+        return syncByRevision(name, defaultData)
       }
     } catch (error) {
-      console.error(`Error initializing data for ${name}:`, error);
-      throw error;
+      console.error(`Error initializing data for ${name}:`, error)
+      throw error
     }
   }
 
@@ -431,42 +431,42 @@ function initialize(gapi) {
    */
   async function syncByRevision(name, newData) {
     try {
-      newData.revision++;
-      await set(name, JSON.stringify(newData));
+      newData.revision++
+      await set(name, JSON.stringify(newData))
 
-      const remoteData = await find(name);
-      console.log("Remote data:", remoteData);
+      const remoteData = await find(name)
+      console.log('Remote data:', remoteData)
 
       if (remoteData && remoteData.revision >= newData.revision) {
         // if the server version is at a higher revision, use the server version (fast-forward)
-        await set(name, JSON.stringify(remoteData));
-        return remoteData;
+        await set(name, JSON.stringify(remoteData))
+        return remoteData
       } else {
         // otherwise use the new version and update server version
-        await set(name, JSON.stringify(newData));
-        console.log(`Updating ${name}, fileId ${newData.fileId}`);
+        await set(name, JSON.stringify(newData))
+        console.log(`Updating ${name}, fileId ${newData.fileId}`)
 
         if (!newData.fileId) {
-          console.error("No fileId found in data object, cannot update");
-          throw new Error("No fileId found in data object");
+          console.error('No fileId found in data object, cannot update')
+          throw new Error('No fileId found in data object')
         }
 
         try {
-          await update(newData.fileId, newData);
-          return newData;
+          await update(newData.fileId, newData)
+          return newData
         } catch (updateError) {
-          console.error(`Error updating remote file: ${updateError}`);
+          console.error(`Error updating remote file: ${updateError}`)
           // If update fails, revert to last known good version
-          const lastGoodVersion = await get(name);
+          const lastGoodVersion = await get(name)
           if (lastGoodVersion) {
-            return JSON.parse(lastGoodVersion);
+            return JSON.parse(lastGoodVersion)
           }
-          throw updateError;
+          throw updateError
         }
       }
     } catch (error) {
-      console.error(`Error syncing revision for ${name}:`, error);
-      throw error;
+      console.error(`Error syncing revision for ${name}:`, error)
+      throw error
     }
   }
 
@@ -484,7 +484,7 @@ function initialize(gapi) {
     syncByRevision,
     initializeData,
     getPagesForDoc,
-  };
+  }
 }
 
-export default initialize;
+export default initialize

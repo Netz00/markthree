@@ -1,5 +1,5 @@
-import React from "react";
-import moment from "moment";
+import React from 'react'
+import moment from 'moment'
 
 export const DocsModal = ({
   closeDocsModal,
@@ -67,7 +67,7 @@ export const DocsModal = ({
                       <td>
                         <div className="select">
                           <select
-                            value={"default"}
+                            value={'default'}
                             onChange={(e) => takeFileAction(e, f)}
                           >
                             <option hidden value="default"></option>
@@ -76,7 +76,7 @@ export const DocsModal = ({
                               <option value="export">Export</option>
                             )}
                             <option value="toggleArchive">
-                              {!f.archived ? "Archive" : "Move to docs"}
+                              {!f.archived ? 'Archive' : 'Move to docs'}
                             </option>
                             <option value="delete">Delete</option>
                           </select>
@@ -84,7 +84,7 @@ export const DocsModal = ({
                       </td>
                       <td
                         className={
-                          f.id === currentDoc ? "m2-is-current-doc" : undefined
+                          f.id === currentDoc ? 'm2-is-current-doc' : undefined
                         }
                       >
                         <a onClick={() => openFile(f.id)}>
@@ -93,7 +93,7 @@ export const DocsModal = ({
                               {f.title.substring(0, 20)}
                             </abbr>
                           ) : (
-                            "Untitled"
+                            'Untitled'
                           )}
                         </a>
                       </td>
@@ -104,11 +104,11 @@ export const DocsModal = ({
           </table>
           <div className="m2-footer">
             <a onClick={toggleViewArchive}>
-              {viewArchive ? "View docs" : "View archive"}
+              {viewArchive ? 'View docs' : 'View archive'}
             </a>
           </div>
         </section>
       </div>
     </div>
-  );
-};
+  )
+}

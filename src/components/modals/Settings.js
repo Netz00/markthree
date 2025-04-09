@@ -1,6 +1,6 @@
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBolt, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBolt, faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 
 export const SettingsModal = ({
   closeSettings,
@@ -81,12 +81,12 @@ export const SettingsModal = ({
             <p>
               <FontAwesomeIcon icon={faInfoCircle} />
               &nbsp;&nbsp;Images you upload via <code>/image</code> are served
-              out of your Google Drive{" "}
+              out of your Google Drive{' '}
               <a onClick={handleViewImageFolder}>here</a>.
             </p>
           </div>
         </section>
       </div>
     </div>
-  );
-};
+  )
+}

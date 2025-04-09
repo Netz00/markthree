@@ -1,4 +1,4 @@
-@import "./base.scss";
+@import './base.scss';
 
 .m2-doc {
   max-width: calc(100vw - 3.4rem);
@@ -18,7 +18,7 @@
   }
 
   &.m2-serif {
-    font-family: "Roboto Slab", serif;
+    font-family: 'Roboto Slab', serif;
   }
 
   & > * {
@@ -49,7 +49,7 @@
     }
   }
 
-  input[type="checkbox"] {
+  input[type='checkbox'] {
     cursor: pointer;
   }
 
@@ -186,7 +186,7 @@
       outline: none;
     }
   }
-  input[type="date"] {
+  input[type='date'] {
     font-size: 1.5rem;
   }
 }
