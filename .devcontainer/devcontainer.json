@@ -1,14 +1,8 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
 {
-    "name": "Node 12",
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-    // "build": {
-    //     "dockerfile": "Dockerfile"
-    // },
-    // Features to add to the dev container. More info: https://containers.dev/features.
-    // "features": {},
-    // Configure tool-specific properties.
+    "name": "Node",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
     "customizations": {
         "vscode": {
             "extensions": [
@@ -28,8 +22,9 @@
         }
     },
     "forwardPorts": [
-        3000 // Common port for web development
+        3000
     ],
-    "postCreateCommand": "npm install && npm run build", // Install dependencies and build the project
-    "remoteUser": "node" // Use the 'node' user for better container management
+    "postCreateCommand": "npm install && npm run build",
+    "updateContentCommand": "npm update",
+    "remoteUser": "node"
 }
