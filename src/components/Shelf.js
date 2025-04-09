@@ -1,70 +1,70 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React, { useState, useEffect, useCallback } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faTimes,
   faEllipsisV,
   faSearch,
   faFileAlt,
   faCog,
-} from "@fortawesome/free-solid-svg-icons";
-import "../style/Shelf.scss";
-import anonymous from "../img/anonymous.png";
-import user from "../img/user.png";
-import { set, get } from "idb-keyval";
+} from '@fortawesome/free-solid-svg-icons'
+import '../style/Shelf.scss'
+import anonymous from '../img/anonymous.png'
+import user from '../img/user.png'
+import { set, get } from 'idb-keyval'
 
 const Shelf = (props) => {
   const [userProfile, setUserProfile] = useState({
-    userEmail: "",
-    photoUrl: "",
-    userName: "",
-  });
+    userEmail: '',
+    photoUrl: '',
+    userName: '',
+  })
 
   const getUserProfile = useCallback(async () => {
     try {
       if (props.tryItNow) {
         setUserProfile({
-          userEmail: "anonymous.bunny@gmail.com",
+          userEmail: 'anonymous.bunny@gmail.com',
           photoUrl: anonymous,
-          userName: "Anonymous Bunny",
-        });
+          userName: 'Anonymous Bunny',
+        })
       } else {
         if (props.gapi) {
           const profile = props.gapi.auth2
             .getAuthInstance()
             .currentUser.get()
-            .getBasicProfile();
-          const userEmail = profile.getEmail();
-          const userName = profile.getName();
+            .getBasicProfile()
+          const userEmail = profile.getEmail()
+          const userName = profile.getName()
 
           setUserProfile({
             userEmail,
             photoUrl: profile.getImageUrl(),
             userName,
-          });
+          })
 
-          await set("userEmail", userEmail);
-          await set("userName", userName);
+          await set('userEmail', userEmail)
+          await set('userName', userName)
         } else {
-          const userEmail = await get("userEmail");
-          const userName = await get("userName");
+          const userEmail = await get('userEmail')
+          const userName = await get('userName')
 
           setUserProfile({
             userEmail,
             userName,
             photoUrl: user,
-          });
+          })
         }
       }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error('Error fetching user profile:', error)
     }
-  }, [props.gapi, props.tryItNow]);
+  }, [props.gapi, props.tryItNow])
 
   useEffect(() => {
-    getUserProfile();
-  }, [getUserProfile]);
+    getUserProfile()
+  }, [getUserProfile])
 
-  const { userEmail, photoUrl, userName } = userProfile;
+  const { userEmail, photoUrl, userName } = userProfile
 
   return props.showShelf ? (
     <div className="m2-shelf">
@@ -113,7 +113,19 @@ const Shelf = (props) => {
       </div>
       <div className="m2-menu-footer">
         <a onClick={props.showHelp}>Help</a>
-        <a onClick={props.showAbout}>About</a>
+        <a href="/privacy.txt" target="_blank" rel="noopener noreferrer">
+          Privacy
+        </a>
+        <a href="/terms.txt" target="_blank" rel="noopener noreferrer">
+          Terms
+        </a>
+        <a
+          href="https://github.com/Netz00/markthree"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Source
+        </a>
       </div>
       <a className="m2-close" onClick={() => props.setShelf(false)}>
         <FontAwesomeIcon icon={faTimes} />
@@ -125,7 +137,7 @@ const Shelf = (props) => {
         <FontAwesomeIcon icon={faEllipsisV} />
       </a>
     </div>
-  );
-};
+  )
+}
 
-export default Shelf;
+export default Shelf
