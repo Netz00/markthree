@@ -112,7 +112,6 @@ const Shelf = (props) => {
         </div>
       </div>
       <div className="m2-menu-footer">
-        <a onClick={props.showContact}>Contact</a>
         <a onClick={props.showHelp}>Help</a>
         <a onClick={props.showAbout}>About</a>
       </div>

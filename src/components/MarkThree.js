@@ -15,7 +15,6 @@ import "typeface-roboto-slab";
 import { SearchModal } from "./modals/Search";
 import { DocsModal } from "./modals/Docs";
 import { SettingsModal } from "./modals/Settings";
-import { ContactModal } from "./modals/Contact";
 import { AboutModal } from "./modals/About";
 import { HelpModal } from "./modals/Help";
 import useSync from "../hooks/useSync";
@@ -44,7 +43,6 @@ function MarkThree(props) {
     showDocs: false,
     showSearch: false,
     showSettings: false,
-    showContact: false,
     showAbout: false,
     showHelp: false,
     goToBlock: null,
@@ -327,7 +325,6 @@ function MarkThree(props) {
         showSettings={() =>
           setState((prev) => ({ ...prev, showSettings: true }))
         }
-        showContact={() => setState((prev) => ({ ...prev, showContact: true }))}
       />
 
       {state.showSearch && (
@@ -376,14 +373,6 @@ function MarkThree(props) {
           serif={state.serif}
           setSerif={setSerif}
           handleViewImageFolder={handleViewImageFolder}
-        />
-      )}
-
-      {state.showContact && (
-        <ContactModal
-          closeContact={() =>
-            setState((prev) => ({ ...prev, showContact: false }))
-          }
         />
       )}
 
