@@ -3,7 +3,6 @@ import MarkThree from "./MarkThree";
 import "../style/Splash.scss";
 import $ from "jquery";
 import { get, set } from "idb-keyval";
-import logo from "../img/logo512.png";
 import $script from "scriptjs";
 import { Home } from "./modals/Home";
 
@@ -138,9 +137,9 @@ const Splash = () => {
         loading && (
           <div className="m2-load-screen">
             <h1 className="title is-1">
-              <img src={logo} alt="logo" />
+              <img src="/img/logo512.png" alt="logo" />
               MarkThree
-              <img src={logo} alt="logo" />
+              <img src="/img/logo512.png" alt="logo" />
             </h1>
           </div>
         )}

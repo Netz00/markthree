@@ -2,7 +2,6 @@ import React from "react";
 import "../../style/Splash.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import logo from "../../img/logo512.png";
 
 export const Home = ({handleLogin}) => {
   return (
@@ -10,9 +9,9 @@ export const Home = ({handleLogin}) => {
       <div className="m2-splash">
         <div className="m2-hero">
           <h1 className="title is-1">
-            <img src={logo} alt="logo" />
+            <img src="/img/logo512.png" alt="logo" />
             MarkThree
-            <img src={logo} alt="logo" />
+            <img src="/img/logo512.png" alt="logo" />
           </h1>
           <p>A seamless, speedy, syncing markdown editor.</p>
           <div className="m2-cta">

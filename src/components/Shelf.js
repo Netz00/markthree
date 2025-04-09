@@ -8,8 +8,6 @@ import {
   faCog,
 } from '@fortawesome/free-solid-svg-icons'
 import '../style/Shelf.scss'
-import anonymous from '../img/anonymous.png'
-import user from '../img/user.png'
 import { set, get } from 'idb-keyval'
 
 const Shelf = (props) => {
@@ -24,7 +22,7 @@ const Shelf = (props) => {
       if (props.tryItNow) {
         setUserProfile({
           userEmail: 'anonymous.bunny@gmail.com',
-          photoUrl: anonymous,
+          photoUrl: '/img/anonymous.png',
           userName: 'Anonymous Bunny',
         })
       } else {
@@ -51,7 +49,7 @@ const Shelf = (props) => {
           setUserProfile({
             userEmail,
             userName,
-            photoUrl: user,
+            photoUrl: "/img/user.png",
           })
         }
       }
